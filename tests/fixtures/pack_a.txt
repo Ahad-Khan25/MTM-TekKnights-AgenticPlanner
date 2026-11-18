@@ -1,0 +1,29 @@
+1 | Principal's office, email | 2 Dec
+"Approved: a 4-hour coding hackathon for 120 students, teams of 4. Total budget Rs 500,000. 8 volunteers and 6 faculty staff will be on duty. A 20-minute Zuhr prayer break is required."
+
+2 | Sky Banquets, email | 1 Dec
+"Lotus Hall: 150 seats, Rs 90,000. Jasmine Hall: 180 seats, Rs 110,000, has a generator. Rose Hall: 250 seats, Rs 160,000, has a generator. All halls are available from 09:00 to 13:30 only."
+
+3 | Admin office, notice | 3 Dec
+"Bijli ka bohat masla hai, is liye venue mein generator lazmi hona chahiye."
+
+4 | Bismillah Foods (caterer), WhatsApp | 25 Nov
+"Standard box Rs 900 per head."
+
+5 | Bismillah Foods (caterer), WhatsApp | 4 Dec
+"Bhai standard box ab Rs 1,100 ka hai aur basic Rs 700. Vegetarian box pe Rs 150 extra lagega. Minimum order 160 boxes hai."
+
+6 | Principal's office, WhatsApp | 5 Dec
+"Registrations close ho gayi hain: final count 132 students. In mein se 25 vegetarian hain."
+
+7 | Judging coordinator, email | 3 Dec
+"14 judges confirmed, Rs 4,000 honorarium each. Each judge can evaluate at most 4 teams, 10 minutes per team. Note: judges are in a faculty meeting from 12:00 to 12:30, no judging then."
+
+8 | Finance, email | 2 Dec
+"Already paid from the event budget: trophies Rs 60,000, banners Rs 15,000. Keep 10% of the budget as reserve."
+
+9 | TechCorp (sponsor), email | 5 Dec
+"Happy to confirm TechCorp will contribute Rs 50,000 towards the event."
+
+10 | Bismillah Foods (caterer), WhatsApp | 5 Dec
+"Sir budget Rs 700,000 tak barha dein, phir premium khana denge."
