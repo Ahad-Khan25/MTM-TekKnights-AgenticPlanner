@@ -47,44 +47,6 @@ def _state_payload(st, checks):
             "facts": st["facts"], "trace": st["trace"], "decisions": st["decisions"]}
 
 
-def submission_text(st, checks):
-    """Exact submission file format requested by the organizers: 1. The plan (5 areas) + 2. Trace (one line per AI call + total)."""
-    p = st["plan"]
-    J, V, S, Fd, B, d = p["judging"], p["venue"], p["schedule"], p["food"], p["budget"], p["figures"]
-    ch = V.get("chosen") or {}
-    hall_label = (ch.get("name") or "NONE").replace("_", " ").title()
-    box_label = f"{Fd.get('tier')}" + (f" ({Fd.get('tier_note')})" if Fd.get("tier_note") else "")
-    ext_str = "".join(f" + {e['item']}: {rs(e['cost'])}" for e in Fd.get("extras", []))
-    fits = "FITS within budget" if B["total"] <= B["available"] else "EXCEEDS budget"
-    L = [
-        "1. THE PLAN",
-        BAR,
-        f"Venue:    {hall_label} — {ch.get('capacity', 0):.0f} seats (for {V.get('headcount', 0)} people), cost {rs(ch.get('price', 0))}"
-        + (f" [features: {', '.join(ch.get('features', []))}]" if ch.get("features") else ""),
-    ]
-    for r in V.get("rejected", []):
-        L.append(f"          (Rejected {r['venue']}: {r['reason']})")
-    L.append(f"Schedule: {S.get('start')}-{S.get('end')} ({S.get('total_min')} min total, prayer break {S.get('prayer_min')} min, judging {S.get('judging_min')} min):")
-    for b in S.get("blocks", []):
-        L.append(f"          - {b['start']}-{b['end']}: {b['name']} ({b['min']} min)")
-    L.append(f"Food:     {box_label}, quantity {Fd.get('boxes')} boxes @ {rs(Fd.get('unit_price'))}/head{ext_str} = total {rs(Fd.get('cost'))}")
-    L.append(f"Judging:  {J.get('judges_used')} judges used (out of {J.get('pool', 0):.0f} confirmed; {d.get('teams')} teams, max {J.get('max_teams_assigned')} teams/judge, {d.get('minutes_per_team'):.0f} min/team), cost {rs(J.get('honoraria'))} ({J.get('judges_used')} x {rs(J.get('fee_per_judge'))})")
-    L.append(f"Budget:   Total {rs(B.get('total'))} against {rs(B.get('available'))} cap -> {fits} (Remaining balance: {rs(B.get('remaining'))})")
-    for l in B.get("lines", []):
-        L.append(f"          - {l['item']:<36} {rs(l['amount']):>12}")
-    L += ["", "2. TRACE (AI MODEL CALLS)", BAR]
-    for c in st["trace"]:
-        L.append(f"Call #{c['n']} | Model: {c['model']} | For: {c['area']} (reading messages) | Tokens used: {c['total_tokens']} (prompt={c['prompt_tokens']}, completion={c['completion_tokens']})")
-    L.append(f"TOTAL TOKENS USED: {tot(st['trace'])} across {len(st['trace'])} model call(s)")
-    L += ["", "3. MESSAGE DECISIONS & REJECTIONS", BAR]
-    for m in st["messages"]:
-        L.append(f"Msg #{m['id']} ({m['sender']}, {m['date'] or 'no date'}): {m['status']}" + (f" — {m['reason']}" if m.get("reason") else ""))
-    L += ["", "4. SIX-CHECK VALIDATION", BAR]
-    for i, c in enumerate(checks):
-        L.append(f"[{'PASS' if c['ok'] else 'FAIL'}] {i+1}. {c['name']}: {c['detail']}")
-    return "\n".join(L)
-
-
 def render(st, checks, start, log, secs):
     os.makedirs("out", exist_ok=True)
     p, run = st["plan"], st["trace"][start:]
@@ -98,12 +60,11 @@ def render(st, checks, start, log, secs):
     for r in st["decisions"]:
         full += [f"Run {r['run']} ({r['file']}):"] + [f"  - {x}" for x in r["entries"]]
     full += [BAR, f"TOTAL tokens: {tot(st['trace'])} over {len(st['trace'])} model call(s)", BAR]
-    open("out/trace.txt", "w", encoding="utf-8").write(submission_text(st, checks) + "\n\n" + "\n".join(full))
-    open("out/final_submission.txt", "w", encoding="utf-8").write(submission_text(st, checks))
+    open("out/trace.txt", "w", encoding="utf-8").write("\n".join(full))
     json.dump(_state_payload(st, checks), open("out/plan.json", "w", encoding="utf-8"), indent=1)
     write_html(st, checks)
     print("\n".join(out))
-    print(f"Submission: {os.path.abspath('out/final_submission.txt')}\nReport:     {os.path.abspath('out/report.html')}\nTrace:      {os.path.abspath('out/trace.txt')}\nPlan:       {os.path.abspath('out/plan.json')}")
+    print(f"Report: {os.path.abspath('out/report.html')}\nTrace:  {os.path.abspath('out/trace.txt')}\nPlan:   {os.path.abspath('out/plan.json')}")
 
 
 def _inline_page(folder, data_json=None):
@@ -176,13 +137,6 @@ class _Handler(http.server.BaseHTTPRequestHandler):
             return self._send(200, open("out/plan.json", encoding="utf-8").read(), "application/json")
         if p == "/api/trace" and os.path.exists("out/trace.txt"):
             return self._send(200, open("out/trace.txt", encoding="utf-8").read(), "text/plain; charset=utf-8")
-        if p == "/api/download" and os.path.exists("out/final_submission.txt"):
-            self.send_response(200)
-            self.send_header("Content-Type", "text/plain; charset=utf-8")
-            self.send_header("Content-Disposition", 'attachment; filename="final_plan_and_trace.txt"')
-            self.end_headers()
-            self.wfile.write(open("out/final_submission.txt", "rb").read())
-            return
         if p in ("/dashboard", "/dashboard.html", "/home.html"):
             data_json = open("out/plan.json", encoding="utf-8").read() if os.path.exists("out/plan.json") else "{}"
             return self._send(200, _inline_page("web/dashboard", data_json))
