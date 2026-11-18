@@ -1,0 +1,48 @@
+1. THE PLAN
+==============================================================================
+Venue:    Hall 2 — 180 seats (for 136 people), cost Rs 110,000 [features: wheelchair]
+          (Rejected seminar_room: capacity 100 < required 136 (136 people + 0% buffer); missing required 'wheelchair')
+          (Rejected hall_1: missing required 'wheelchair')
+Schedule: 10:00-14:00 (240 min total, prayer break 20 min, judging 80 min):
+          - 10:00-10:15: Opening (15 min)
+          - 10:15-10:50: Build (hacking) (35 min)
+          - 10:50-11:35: Lunch (45 min)
+          - 11:35-11:55: Prayer break (20 min)
+          - 11:55-12:25: Build (hacking) (30 min)
+          - 12:25-13:45: Judging (80 min)
+          - 13:45-14:00: Closing & awards (15 min)
+Food:     lunch_standard (biryani box updated), quantity 136 boxes @ Rs 850/head + service_charge (10%): Rs 11,560 = total Rs 127,160
+Judging:  8 judges used (out of 15 confirmed; 30 teams, max 4 teams/judge, 20 min/team), cost Rs 32,000 (8 x Rs 4,000)
+Budget:   Total Rs 344,160 against Rs 400,000 cap -> FITS within budget (Remaining balance: Rs 55,840)
+          - Venue                                  Rs 110,000
+          - Food                                   Rs 127,160
+          - Judge honoraria (8 x 4000)              Rs 32,000
+          - Prepaid: trophies                       Rs 60,000
+          - Prepaid: banners                        Rs 15,000
+
+2. TRACE (AI MODEL CALLS)
+==============================================================================
+Call #1 | Model: openai/gpt-oss-20b | For: reading (reading messages) | Tokens used: 2719 (prompt=1561, completion=1158)
+TOTAL TOKENS USED: 2719 across 1 model call(s)
+
+3. MESSAGE DECISIONS & REJECTIONS
+==============================================================================
+Msg #1 (Registrar's office, 11-06): ACCEPTED
+Msg #2 (Faisal Convention Centre, 11-02): ACCEPTED
+Msg #3 (Student disability office, 11-10): ACCEPTED
+Msg #4 (Caterer, 10-25): SUPERSEDED — lunch_standard superseded by msg 5
+Msg #5 (Caterer, 11-11): ACCEPTED
+Msg #6 (Judging lead, 11-09): ACCEPTED
+Msg #7 (Finance, 11-08): ACCEPTED
+Msg #8 (Student society, 11-12): IGNORED — request
+Msg #9 (Faisal Convention Centre, 11-13): IGNORED — irrelevant
+Msg #10 (Library, 11-14): IGNORED — irrelevant
+
+4. SIX-CHECK VALIDATION
+==============================================================================
+[PASS] 1. Figures correct & consistent: teams=30, judges needed=8, people to feed=136, boxes=136
+[PASS] 2. Within budget: total Rs 344,160 vs available Rs 400,000 (remaining Rs 55,840)
+[PASS] 3. Venue fits & meets rules: hall_2 cap 180 >= 136
+[PASS] 4. Schedule valid: 10:00-14:00 = 240 min, prayer 20 min, judging 80 min, no overlaps
+[PASS] 5. Enough judges: pool 15 vs needed 8; max 4 teams/judge
+[PASS] 6. All five areas present: venue, schedule, food, judging, budget

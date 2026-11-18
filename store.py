@@ -47,6 +47,8 @@ def allowed(role, f):
     a = area_of(f)
     if role == "judge" and f["kind"] == "judge_rule" and f["value"].get("op") == "forbid":
         return True  # a judge may state their own unavailability
+    if f["kind"] == "hard_rule" and isinstance(f.get("value"), dict) and f["value"].get("area") == "venue":
+        return role in ("organizer", "venue", "other")
     return a in ROLE_AREAS.get(role, set()) or (a == "funding" and role in ("organizer", "finance"))
 
 

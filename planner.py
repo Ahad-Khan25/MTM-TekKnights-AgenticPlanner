@@ -85,11 +85,16 @@ def venue(F, d, J):
     feats = [str(x).lower() for r in rules(F) if r["area"] == "venue" and r["op"] == "require" and r.get("value")
              for x in (r["value"] if isinstance(r["value"], list) else [r["value"]])]
     banned = [str(r["value"]).lower() for r in rules(F) if r["area"] == "venue" and r["op"] == "forbid" and r.get("value")]
+    banned_halls = {re.sub(r"\W+", "_", str(f["key"]).lower()).replace("_unavailable", "")
+                    for f in F.values() if "unavailable" in str(f["key"]).lower() or "maintenance" in str(f.get("value", "")).lower()}
     min_cap = num(rule(F, "capacity", ("min",))) or 0
     length = total_minutes(F)
     chosen, rejected = None, []
     for f in sorted(of_kind(F, "venue_option"), key=lambda f: num(f["value"].get("price", 0)) or 0):
         v = f["value"]
+        if isinstance(v, dict) and v.get("available") is False or f["key"].lower() in banned_halls or any(b in f["key"].lower() for b in banned):
+            rejected.append({"venue": f["key"], "reason": "unavailable / under maintenance on event date"})
+            continue
         cap, price = num(v.get("capacity", 0)) or 0, num(v.get("price", 0)) or 0
         have = " ".join(map(str, v.get("features", []))).lower()
         why = []
@@ -158,16 +163,20 @@ def food(F, d, J, downgrade=0):
         return {"boxes": boxes, "headcount": fed, "error": "no meal price stated"}
     i = min(downgrade, len(tiers) - 1)
     tier = tiers[i]
-    cost = boxes * num(tier["value"])
+    base_cost = boxes * num(tier["value"])
     heads = {f["key"]: num(f["value"]) for f in of_kind(F, "headcount")}
     extras = []
     for f in prices:
-        if f.get("scope") not in ("meal", "judge", ""):
+        if f.get("unit") == "%" or "service_charge" in f["key"] or "surcharge" in f["key"]:
+            pct = num(f["value"]) or 0
+            if pct > 0:
+                extras.append({"item": f"{f['key']} ({pct:.0f}%)", "qty": 1, "unit": round(base_cost * pct / 100), "cost": round(base_cost * pct / 100)})
+        elif f.get("scope") not in ("meal", "judge", ""):
             qty = heads.get(f["scope"], boxes if f["scope"] == "all" else 0)
             extras.append({"item": f["key"], "qty": qty, "unit": num(f["value"]), "cost": qty * num(f["value"])})
-    cost += sum(e["cost"] for e in extras)
+    cost = base_cost + sum(e["cost"] for e in extras)
     min_cost = num(rule(F, "cost", ("min",))) or 0
-    return {"boxes": boxes, "headcount": fed, "tier": tier["key"], "unit_price": num(tier["value"]),
+    return {"boxes": boxes, "headcount": fed, "tier": tier["key"], "tier_note": tier.get("note", ""), "unit_price": num(tier["value"]),
             "price_msg": tier["msg_id"], "extras": extras, "cost": max(cost, min_cost),
             "cheaper_tier_available": i < len(tiers) - 1, "downgrade": downgrade}
 

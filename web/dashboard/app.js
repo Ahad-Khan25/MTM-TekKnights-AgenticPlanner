@@ -601,6 +601,43 @@ if ($("addLineBtn")) {
   });
 }
 
+if ($("downloadPlanBtn")) {
+  $("downloadPlanBtn").addEventListener("click", function () {
+    if (location.protocol.startsWith("http")) {
+      window.location.href = "/api/download";
+      return;
+    }
+    // Static file:// export fallback
+    var p = (state.live && state.live.plan) || {};
+    var V = p.venue || {}, ch = V.chosen || {}, S = p.schedule || {}, Fd = p.food || {}, J = p.judging || {}, B = p.budget || {}, d = p.figures || {};
+    var lines = [
+      "1. THE PLAN",
+      "==============================================================================",
+      "Venue:    " + (ch.name || "NONE") + " — " + (ch.capacity || 0) + " seats (for " + (V.headcount || 0) + " people), cost " + fmt(ch.price || 0),
+      "Schedule: " + (S.start || "") + "-" + (S.end || "") + " (" + (S.total_min || 240) + " min total, prayer break " + (S.prayer_min || 0) + " min, judging " + (S.judging_min || 0) + " min):",
+      (S.blocks || []).map(function (b) { return "          - " + b.start + "-" + b.end + ": " + b.name + " (" + b.min + " min)"; }).join("\n"),
+      "Food:     " + (Fd.tier || "") + ", quantity " + (Fd.boxes || 0) + " boxes @ " + fmt(Fd.unit_price || 0) + "/head = total " + fmt(Fd.cost || 0),
+      "Judging:  " + (J.judges_used || 0) + " judges used (out of " + (J.pool || 0) + " confirmed), cost " + fmt(J.honoraria || 0),
+      "Budget:   Total " + fmt(B.total || 0) + " against " + fmt(B.available || 0) + " cap -> " + ((B.total || 0) <= (B.available || 0) ? "FITS within budget" : "EXCEEDS budget") + " (Remaining: " + fmt(B.remaining || 0) + ")",
+      (B.lines || []).map(function (l) { return "          - " + l.item + ": " + fmt(l.amount); }).join("\n"),
+      "",
+      "2. TRACE (AI MODEL CALLS)",
+      "=============================================================================="
+    ];
+    var totTok = 0;
+    calls.filter(function (c) { return !c.skip; }).forEach(function (c) {
+      var tk = c.tot || (c.ti + c.to);
+      totTok += tk;
+      lines.push("Call #" + c.id + " | Model: " + c.model + " | For: " + c.area + " (reading messages) | Tokens used: " + tk + " (prompt=" + c.ti + ", completion=" + c.to + ")");
+    });
+    lines.push("TOTAL TOKENS USED: " + totTok);
+    var blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "final_plan_and_trace.txt";
+    a.click();
+  });
+}
 if ($("uploadBtn") && $("fileInput")) {
   $("uploadBtn").addEventListener("click", function () { $("fileInput").click(); });
   $("fileInput").addEventListener("change", function () {
