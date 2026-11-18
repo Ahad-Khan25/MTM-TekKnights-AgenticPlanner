@@ -1,5 +1,5 @@
-"""Output: stdout report, out/trace.txt, out/plan.json, out/report.html (self-contained), and optional HTTP server for Render/Docker."""
-import html, http.server, json, os, shutil, tempfile
+"""Output: stdout report, out/trace.txt, out/plan.json, out/report.html (self-contained with Animated Intro -> Command Centre Dashboard), and HTTP server for Render/Docker."""
+import html, http.server, json, os, re, shutil, tempfile
 
 BAR = "=" * 78
 
@@ -42,6 +42,11 @@ def tot(calls):
     return sum(c["total_tokens"] or 0 for c in calls)
 
 
+def _state_payload(st, checks):
+    return {"plan": st["plan"], "checks": checks, "messages": st["messages"],
+            "facts": st["facts"], "trace": st["trace"], "decisions": st["decisions"]}
+
+
 def render(st, checks, start, log, secs):
     os.makedirs("out", exist_ok=True)
     p, run = st["plan"], st["trace"][start:]
@@ -56,65 +61,64 @@ def render(st, checks, start, log, secs):
         full += [f"Run {r['run']} ({r['file']}):"] + [f"  - {x}" for x in r["entries"]]
     full += [BAR, f"TOTAL tokens: {tot(st['trace'])} over {len(st['trace'])} model call(s)", BAR]
     open("out/trace.txt", "w", encoding="utf-8").write("\n".join(full))
-    json.dump({"plan": p, "checks": checks, "messages": st["messages"]}, open("out/plan.json", "w", encoding="utf-8"), indent=1)
+    json.dump(_state_payload(st, checks), open("out/plan.json", "w", encoding="utf-8"), indent=1)
     write_html(st, checks)
     print("\n".join(out))
     print(f"Report: {os.path.abspath('out/report.html')}\nTrace:  {os.path.abspath('out/trace.txt')}\nPlan:   {os.path.abspath('out/plan.json')}")
 
 
+def _inline_page(folder, data_json=None):
+    h = open(os.path.join(folder, "index.html"), encoding="utf-8").read()
+    css = open(os.path.join(folder, "styles.css"), encoding="utf-8").read()
+    js = open(os.path.join(folder, "app.js"), encoding="utf-8").read()
+    h = re.sub(r'<link[^>]+href="styles\.css"[^>]*/?>', lambda _: f"<style>\n{css}\n</style>", h)
+    boot = f"<script>window.__MTM_DATA__ = {data_json};</script>\n" if data_json else ""
+    h = re.sub(r'<script[^>]+src="app\.js"[^>]*></script>', lambda _: f"{boot}<script>\n{js}\n</script>", h)
+    return h
+
+
 def write_html(st, checks):
-    e = lambda s: html.escape(str(s))
-    p = st["plan"]
-    B = p["budget"]
-    pct = min(100, B["total"] / B["available"] * 100) if B["available"] else 100
-    secs = {"VENUE": [], "SCHEDULE": [], "FOOD": [], "JUDGING": [], "BUDGET": []}
-    cur = None
-    for line in plan_lines(p)[1:]:
-        tag = line[1:line.index("]")] if line.startswith("[") else None
-        cur = tag or cur
-        secs[cur].append(line.split("]", 1)[1].strip() if tag else line.strip())
-    cards = "".join(f"<div class=card><h3>{k.title()}</h3>" + "".join(f"<div>{e(x)}</div>" for x in v) + "</div>" for k, v in secs.items())
-    chk = "".join(f"<li><span class='b {'ok' if c['ok'] else 'bad'}'>{'PASS' if c['ok'] else 'FAIL'}</span> <b>{e(c['name'])}</b> - {e(c['detail'])}</li>" for c in checks)
-    run, tr = 0, ""
-    for c in st["trace"]:
-        run += c["total_tokens"] or 0
-        tr += (f"<details><summary>#{c['n']} &middot; {e(c['model'])} &middot; <b>{c['area']}</b> &middot; prompt {c['prompt_tokens']} / completion "
-               f"{c['completion_tokens']} / total {c['total_tokens']} &middot; running total {run}</summary><h4>Input</h4><pre>{e(c['input'])}</pre>"
-               f"<h4>Output</h4><pre>{e(c['text'])}</pre></details>")
-    dl = "".join(f"<h4>Run {r['run']} ({e(r['file'])})</h4><ul>" + "".join(f"<li>{e(x)}</li>" for x in r["entries"]) + "</ul>" for r in st["decisions"])
-    ms = "".join(f"<tr class={m['status']}><td>{m['id']}</td><td>{m['status']}</td><td>{e(m['sender'])}</td><td>{e(m['date'])}</td><td>{e(m['reason'])}</td></tr>" for m in st["messages"])
-    page = f"""<!doctype html><html><head><meta charset=utf-8><title>Mind to Machine - Plan</title><style>
-body{{font-family:Segoe UI,Arial,sans-serif;background:#0f172a;color:#f1f5f9;margin:0;padding:20px}}h1{{margin:0 0 10px}}
-.tabs button{{background:#1e293b;color:#f1f5f9;border:1px solid #475569;padding:10px 18px;font-size:15px;cursor:pointer;border-radius:6px 6px 0 0}}
-.tabs button.on{{background:#f1f5f9;color:#0f172a;font-weight:bold}}.tab{{display:none;background:#1e293b;padding:16px;border-radius:0 8px 8px 8px}}.tab.on{{display:block}}
-.grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:12px}}.card{{background:#0f172a;border:1px solid #475569;border-radius:8px;padding:12px;font-size:14px;line-height:1.5}}
-h3{{margin:0 0 6px;color:#38bdf8}}.b{{padding:2px 8px;border-radius:4px;font-weight:bold}}.ok{{background:#16a34a}}.bad{{background:#dc2626}}
-li{{margin:6px 0}}.bar{{background:#334155;border-radius:6px;height:22px;overflow:hidden}}.fill{{height:100%;background:{'#16a34a' if B['total'] <= B['available'] else '#dc2626'}}}
-pre{{white-space:pre-wrap;background:#020617;padding:10px;border-radius:6px;font-size:12px}}details{{border:1px solid #475569;border-radius:6px;margin:6px 0;padding:8px}}
-table{{border-collapse:collapse;width:100%}}td,th{{border:1px solid #475569;padding:6px;text-align:left;font-size:14px}}
-tr.REJECTED td{{background:#7f1d1d;color:#fff;font-weight:bold}}tr.ACCEPTED td:nth-child(2){{color:#4ade80}}tr.IGNORED td:nth-child(2),tr.SUPERSEDED td:nth-child(2){{color:#fbbf24}}
-textarea{{width:100%;background:#020617;color:#f1f5f9;border:1px solid #475569;border-radius:6px;padding:8px;font-family:monospace}}
-.btn{{background:#0284c7;color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;margin-right:6px}}
-</style></head><body><h1>Mind to Machine &mdash; Hackathon Plan</h1>
-<div class=tabs><button class=on onclick="t(0)">Plan</button><button onclick="t(1)">Trace</button><button onclick="t(2)">Messages</button></div>
-<div class="tab on"><h3>Budget: Rs {B['total']:,.0f} of Rs {B['available']:,.0f} (remaining Rs {B['remaining']:,.0f})</h3><div class=bar><div class=fill style="width:{pct:.1f}%"></div></div><br>
-<div class=grid>{cards}</div><h3>Six checks</h3><ul>{chk}</ul></div>
-<div class=tab><p>{len(st['trace'])} model call(s), TOTAL tokens <b>{run}</b>. Token counts copied from the provider API response.</p>{tr}<h3>Decision log (code, no model call)</h3>{dl}</div>
-<div class=tab><table><tr><th>#</th><th>Status</th><th>Sender</th><th>Date</th><th>Reason</th></tr>{ms}</table></div>
+    payload_json = json.dumps(_state_payload(st, checks))
+    if os.path.exists("web/intro/index.html") and os.path.exists("web/dashboard/index.html"):
+        intro_doc = _inline_page("web/intro")
+        dash_doc = _inline_page("web/dashboard", payload_json)
+        open("out/index.html", "w", encoding="utf-8").write(intro_doc)
+        open("out/dashboard.html", "w", encoding="utf-8").write(dash_doc)
+        # Build a single self-contained out/report.html that shows Animated Intro first, then switches to Command Centre Dashboard when "Plan your event now" is clicked
+        b64_intro = json.dumps(intro_doc)
+        b64_dash = json.dumps(dash_doc)
+        combined = f"""<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mind to Machine · TekKnights Agentic Event Planner</title>
+<style>html,body,iframe{{margin:0;padding:0;width:100%;height:100%;border:0;overflow:hidden;background:#0b1021}}</style>
+</head><body><iframe id="stage" title="Mind to Machine"></iframe>
 <script>
-function t(i){{document.querySelectorAll('.tab').forEach((x,j)=>x.classList.toggle('on',i==j));document.querySelectorAll('.tabs button').forEach((x,j)=>x.classList.toggle('on',i==j))}}
-if(location.protocol.startsWith('http')){{
-  const d=document.createElement('div');d.style='margin-top:16px;background:#1e293b;padding:14px;border-radius:8px;border:1px solid #475569';
-  d.innerHTML='<h3>Live Update (Web / Render mode)</h3><textarea id=m rows=3 placeholder="Paste new message(s) or full pack..."></textarea><br><br><button class=btn onclick="send(false)">Send Message(s)</button><button class=btn style="background:#dc2626" onclick="send(true)">Reset State & Run</button><span id=st></span>';
-  document.body.appendChild(d);
+const INTRO_HTML = {b64_intro};
+const DASH_HTML = {b64_dash};
+const frame = document.getElementById('stage');
+function showDashboard() {{
+  frame.srcdoc = DASH_HTML;
+  frame.onload = () => {{
+    try {{ frame.contentWindow.__MTM_SHOW_INTRO__ = showIntro; }} catch (e) {{}}
+  }};
 }}
-async function send(reset){{
-  document.getElementById('st').textContent='Running...';
-  const r=await fetch(reset?'/api/reset':'/api/run',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{text:document.getElementById('m').value}})}});
-  if(r.ok)location.reload();else document.getElementById('st').textContent='Error: '+await r.text();
+function showIntro() {{
+  frame.srcdoc = INTRO_HTML;
+  frame.onload = () => {{
+    try {{ frame.contentWindow.__MTM_SHOW_DASHBOARD__ = showDashboard; }} catch (e) {{}}
+  }};
 }}
+if (location.hash === '#dashboard') showDashboard(); else showIntro();
 </script></body></html>"""
-    open("out/report.html", "w", encoding="utf-8").write(page)
+        open("out/report.html", "w", encoding="utf-8").write(combined)
+        return
+    # Fallback minimal HTML if web/ folder is missing
+    open("out/report.html", "w", encoding="utf-8").write(f"<pre>{html.escape(payload_json)}</pre>")
+
+
+def _ensure_built():
+    if not os.path.exists("out/plan.json") and os.path.exists("data/sample_pack.txt"):
+        import main
+        main.main("data/sample_pack.txt")
 
 
 class _Handler(http.server.BaseHTTPRequestHandler):
@@ -125,17 +129,22 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body.encode("utf-8") if isinstance(body, str) else body)
 
     def do_GET(self):
-        if self.path == "/api/health":
+        p = self.path.split("?")[0]
+        if p == "/api/health":
             return self._send(200, '{"status":"ok"}', "application/json")
-        if self.path == "/api/plan" and os.path.exists("out/plan.json"):
+        _ensure_built()
+        if p in ("/api/plan", "/api/state") and os.path.exists("out/plan.json"):
             return self._send(200, open("out/plan.json", encoding="utf-8").read(), "application/json")
-        if self.path == "/api/trace" and os.path.exists("out/trace.txt"):
+        if p == "/api/trace" and os.path.exists("out/trace.txt"):
             return self._send(200, open("out/trace.txt", encoding="utf-8").read(), "text/plain; charset=utf-8")
-        if not os.path.exists("out/report.html") and os.path.exists("data/sample_pack.txt"):
-            import main
-            main.main("data/sample_pack.txt")
-        body = open("out/report.html", encoding="utf-8").read() if os.path.exists("out/report.html") else "<h1>Ready</h1>"
-        self._send(200, body)
+        if p in ("/dashboard", "/dashboard.html", "/home.html"):
+            data_json = open("out/plan.json", encoding="utf-8").read() if os.path.exists("out/plan.json") else "{}"
+            return self._send(200, _inline_page("web/dashboard", data_json))
+        if p in ("/", "/index.html"):
+            return self._send(200, _inline_page("web/intro"))
+        if p == "/report.html" and os.path.exists("out/report.html"):
+            return self._send(200, open("out/report.html", encoding="utf-8").read())
+        return self._send(200, _inline_page("web/intro"))
 
     def do_POST(self):
         import main
@@ -160,5 +169,5 @@ class _Handler(http.server.BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", "8000"))
-    print(f"Serving Mind to Machine on http://0.0.0.0:{port}")
+    print(f"Serving Mind to Machine (Intro -> Dashboard) on http://0.0.0.0:{port}")
     http.server.HTTPServer(("0.0.0.0", port), _Handler).serve_forever()

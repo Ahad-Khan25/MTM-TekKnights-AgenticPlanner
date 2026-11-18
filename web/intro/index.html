@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agentic Event Planner Powered By TekKnights.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- Top intro progress bar & skip control -->
+  <div class="intro-hud" id="introHud">
+    <div class="intro-progress-track">
+      <div class="intro-progress-fill" id="introProgressFill"></div>
+    </div>
+    <button type="button" class="skip-btn" id="skipIntroBtn">Skip Intro →</button>
+  </div>
+
+  <div class="page-frame">
+    <main class="canvas">
+      <div class="ambient-glow ambient-glow--top" aria-hidden="true"></div>
+      <div class="ambient-glow ambient-glow--mid" aria-hidden="true"></div>
+      <div class="hero-grid-lines" aria-hidden="true"></div>
+
+      <!-- Floating Top Navbar -->
+      <header class="navbar intro-step" data-step="1">
+        <a href="#hero" class="brand">
+          <span class="brand-tile">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M13.5 3L5.5 13.5H11.5L10.5 21L18.5 10.5H12.5L13.5 3Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+          <span class="brand-name">Agentic Event Planner</span>
+          <span class="brand-tag">Powered By TekKnights.</span>
+        </a>
+
+        <nav class="nav-links" aria-label="Primary">
+          <a href="#hero">Signal Vortex</a>
+          <a href="#dashboard">Live Plan</a>
+          <a href="#capabilities">Validator</a>
+          <a href="#cta-finale">Launch</a>
+        </nav>
+
+        <div class="nav-actions">
+          <button type="button" class="btn btn--ghost" id="replayIntroBtn">
+            Replay Intro
+          </button>
+          <a href="#cta-finale" class="btn btn--primary">Plan your event now</a>
+        </div>
+      </header>
+
+      <!-- STAGE 1: HERO + VIDEO-INSPIRED MESSAGE SWIRL -> AI CORE -->
+      <section class="hero" id="hero">
+        <div class="hero-center">
+          <p class="eyebrow intro-step" data-step="1">
+            AUTONOMOUS EVENT INTELLIGENCE · ISLAMABAD
+          </p>
+
+          <h1 class="hero-title intro-step" data-step="2">
+            <span class="title-line">Turn Raw Messages</span>
+            <span class="title-line title-line--with-badge">
+              <span>Into</span>
+              <span class="hero-icon-badge" aria-hidden="true">
+                <svg viewBox="0 0 28 28" fill="none">
+                  <path
+                    d="M15.8 3.5L6.5 15.8H13.4L12.2 24.5L21.5 12.2H14.6L15.8 3.5Z"
+                    fill="white"
+                  />
+                </svg>
+              </span>
+              <span>Validated Plans</span>
+            </span>
+          </h1>
+
+          <p class="hero-subtitle intro-step" data-step="3">
+            Messages in. Valid plan out. Watch unstructured emails, WhatsApp
+            threads, and Roman Urdu updates converge into a 6-check verified plan.
+          </p>
+        </div>
+
+        <!-- Video-inspired Message Swirl -> Glowing AI Circuit Core -> 5 Green-Checked Areas -->
+        <div class="vortex-stage intro-step" data-step="3" id="vortexStage">
+          <!-- Floating Message Bubbles swirling inward -->
+          <div class="bubble-field" aria-hidden="true">
+            <div class="msg-bubble b1">Dean's Email · 150 Students</div>
+            <div class="msg-bubble b2">WhatsApp · 12 Nov Price</div>
+            <div class="msg-bubble b3">Roman Urdu · Delivery Free</div>
+            <div class="msg-bubble b4">Margalla Halls · 200 Seats</div>
+            <div class="msg-bubble b5">20 Judges Confirmed</div>
+            <div class="msg-bubble b6">Finance · Prepaid Rs 130k</div>
+            <div class="msg-bubble b7">15-min Prayer Break</div>
+          </div>
+
+          <!-- Glowing AI Circuit Core -->
+          <div class="circuit-core" aria-hidden="true">
+            <div class="core-halo"></div>
+            <div class="core-ring core-ring--outer"></div>
+            <div class="core-ring core-ring--inner"></div>
+            <div class="core-chip">
+              <svg viewBox="0 0 32 32" fill="none">
+                <rect x="9" y="9" width="14" height="14" rx="3" stroke="white" stroke-width="2" />
+                <path d="M13 3V7M19 3V7M13 25V29M19 25V29M3 13H7M3 19H7M25 13H29M25 19H29" stroke="white" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- 5 Area Nodes with Emerald Checkmarks (from video finale) -->
+          <div class="five-areas" id="fiveAreas">
+            <div class="area-node" style="--i: 0">
+              <div class="area-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 10.5L12 4L20 10.5V19.5C20 20.1 19.6 20.5 19 20.5H5C4.4 20.5 4 20.1 4 19.5V10.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M9.5 20.5V14H14.5V20.5" stroke="currentColor" stroke-width="1.8"/></svg>
+                <span class="check-badge">✓</span>
+              </div>
+              <span>Venue</span>
+            </div>
+            <div class="area-node" style="--i: 1">
+              <div class="area-icon">
+                <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="15" rx="2.5" stroke="currentColor" stroke-width="1.8"/><path d="M8 3V6.5M16 3V6.5M4 9.5H20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="check-badge">✓</span>
+              </div>
+              <span>Schedule</span>
+            </div>
+            <div class="area-node" style="--i: 2">
+              <div class="area-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M7 4V11M10 4V11M7 8H10M8.5 11V20M16 4C14.3 4 13.5 5.6 13.5 8C13.5 10 14.5 11.2 16 11.5V20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="check-badge">✓</span>
+              </div>
+              <span>Food</span>
+            </div>
+            <div class="area-node" style="--i: 3">
+              <div class="area-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M14 5L19 10L12.5 16.5L7.5 11.5L14 5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5 19H14M10 14L5.5 18.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span class="check-badge">✓</span>
+              </div>
+              <span>Judging</span>
+            </div>
+            <div class="area-node" style="--i: 4">
+              <div class="area-icon">
+                <svg viewBox="0 0 24 24" fill="none"><path d="M4 17L9.5 11.5L13.5 15L20 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.5 8H20V12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="check-badge">✓</span>
+              </div>
+              <span>Budget</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STAGE 2: LIVE PLAN DASHBOARD PREVIEW -->
+      <section class="section-preview" id="dashboard">
+        <div class="section-header reveal">
+          <p class="eyebrow">EVENT EXECUTION ENGINE</p>
+          <h2 class="section-title">
+            Where Messy Signals Meet <span class="text-accent">Intelligence</span>
+          </h2>
+          <p class="section-subtitle">
+            One model call reads English and Roman Urdu updates. Plain Python
+            resolves authority, plans all five areas, and blocks invalid changes.
+          </p>
+        </div>
+
+        <div class="dashboard-shell reveal">
+          <aside class="dash-sidebar">
+            <div class="dash-brand">
+              <span class="brand-tile brand-tile--sm">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <path d="M13.5 3L5.5 13.5H11.5L10.5 21L18.5 10.5H12.5L13.5 3Z" fill="currentColor" />
+                </svg>
+              </span>
+              <span>M2M Core</span>
+            </div>
+            <span class="dash-menu-label">Pipeline</span>
+            <ul class="dash-nav">
+              <li class="active">Plan Overview</li>
+              <li>5-Area Breakdown</li>
+              <li>Model Trace (1 Call)</li>
+              <li>Rejection Guard</li>
+            </ul>
+          </aside>
+
+          <div class="dash-main">
+            <div class="dash-topbar">
+              <div class="dash-search">
+                <span class="status-dot status-dot--emerald pulse-dot"></span>
+                <span>State synced · .state/state.json</span>
+              </div>
+              <div class="dash-top-actions">
+                <span class="badge-chip badge-chip--emerald">6 / 6 Checks PASS</span>
+              </div>
+            </div>
+
+            <div class="dash-greeting">
+              <div>
+                <h3>Islamabad 4-Hour Hackathon Plan</h3>
+                <p>150 students · 50 teams · 17 judges · 177 fed</p>
+              </div>
+              <div class="live-toast">
+                <span class="status-dot status-dot--emerald"></span>
+                <span>12 Nov lunch price superseded 20 Oct quote</span>
+              </div>
+            </div>
+
+            <div class="dash-kpis">
+              <div class="dash-kpi-card">
+                <span class="dash-kpi-label">Venue Selected</span>
+                <strong class="dash-kpi-val">Hall A (200)</strong>
+                <span class="dash-kpi-delta positive">Rs 120,000 · Fits 177</span>
+              </div>
+              <div class="dash-kpi-card">
+                <span class="dash-kpi-label">Catering Total</span>
+                <strong class="dash-kpi-val">Rs 212,400</strong>
+                <span class="dash-kpi-delta">177 × Rs 1,200 (12 Nov)</span>
+              </div>
+              <div class="dash-kpi-card">
+                <span class="dash-kpi-label">Judging Pool</span>
+                <strong class="dash-kpi-val">17 / 20</strong>
+                <span class="dash-kpi-delta positive">Max 3 teams · 15m/team</span>
+              </div>
+              <div class="dash-kpi-card">
+                <span class="dash-kpi-label">Total Budget</span>
+                <strong class="dash-kpi-val">Rs 547,400</strong>
+                <span class="dash-kpi-delta positive">Cap Rs 650,000 · Valid</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STAGE 3: CAPABILITIES BENTO -->
+      <section class="section-capabilities" id="capabilities">
+        <div class="section-header reveal">
+          <p class="eyebrow">PLATFORM CAPABILITIES</p>
+          <h2 class="section-title">Built for Zero-Hallucination Planning</h2>
+        </div>
+
+        <div class="bento-grid">
+          <article class="bento-card reveal">
+            <div class="bento-visual bento-visual--stream">
+              <div class="stream-pill">
+                <span class="status-dot status-dot--emerald pulse-dot"></span>
+                Live Signal Stream
+              </div>
+              <div class="stream-toast">
+                <strong>Conflict Intercepted</strong>
+                <span>100 boxes &lt; 177 headcount → <em>REJECTED</em></span>
+              </div>
+            </div>
+            <h3>Real-Time Conflict Guard</h3>
+            <p>
+              Validates every update on a shadow copy before committing. Invalid
+              changes are rolled back with exact numbers in the trace.
+            </p>
+          </article>
+
+          <article class="bento-card reveal">
+            <div class="bento-visual bento-visual--model">
+              <div class="model-number" id="animatedBudget">Rs 547,400</div>
+              <span class="delta-badge">+Rs 102,600 buffer left</span>
+              <div class="formula-pill">Venue + Food + Judges + Prepaid</div>
+            </div>
+            <h3>Deterministic Arithmetic</h3>
+            <p>
+              Zero LLM math. Pure Python functions compute teams, headcount,
+              schedule blocks, and budget totals with 100% precision.
+            </p>
+          </article>
+
+          <article class="bento-card reveal">
+            <div class="bento-visual bento-visual--rings">
+              <div class="ring ring--outer"></div>
+              <div class="ring ring--inner"></div>
+              <span class="orbit-tag orbit-tag--1">Venue ✓</span>
+              <span class="orbit-tag orbit-tag--2">Schedule ✓</span>
+              <span class="orbit-tag orbit-tag--3">Budget ✓</span>
+              <div class="center-core">6/6</div>
+            </div>
+            <h3>Dependency-Driven Recompute</h3>
+            <p>
+              Changing printing cost recomputes only Budget in code—keeping
+              model calls to 1 and execution well under the 1-minute limit.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- STAGE 4: FINALE CTA WITH "Plan your event now" BUTTON -->
+      <section class="cta-finale reveal" id="cta-finale">
+        <div class="cta-finale__glow" aria-hidden="true"></div>
+        <p class="eyebrow eyebrow--light">Agentic Event Planner Powered By TekKnights.</p>
+        <h2 class="cta-finale__title">Messages in. Valid plan out.</h2>
+        <p class="cta-finale__sub">
+          Every constraint verified. Every conflict logged. Ready to run your
+          event plan.
+        </p>
+
+        <div class="cta-finale__checks">
+          <span>Venue ✓</span>
+          <span>Schedule ✓</span>
+          <span>Food ✓</span>
+          <span>Judging ✓</span>
+          <span>Budget ✓</span>
+        </div>
+
+        <button type="button" class="btn btn--finale" id="planNowBtn">
+          <span>Plan your event now</span>
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path
+              d="M4.5 10H15.5M15.5 10L11 5.5M15.5 10L11 14.5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </button>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
