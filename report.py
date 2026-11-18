@@ -147,9 +147,30 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         return self._send(200, _inline_page("web/intro"))
 
     def do_POST(self):
-        import base64, main, reader
+        import base64, main, planner, reader, store, validator
         n = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(n) or b"{}")
+        if self.path == "/api/edit":
+            st = store.load()
+            if st["plan"] is None and os.path.exists("data/sample_pack.txt"):
+                main.main("data/sample_pack.txt")
+                st = store.load()
+            log = []
+            facts = []
+            for k, kind, scope in [("students", "headcount", "attendee"), ("team_size", "team_size", "attendee"),
+                                   ("staff", "staff_count", "staff"), ("budget_cap", "approved_total_budget", "event"),
+                                   ("judges_confirmed", "judge_pool", "judging"), ("lunch_standard", "unit_price", "meal")]:
+                if payload.get(k) not in (None, ""):
+                    facts.append({"kind": kind, "key": k, "value": float(payload[k]), "unit": "", "scope": scope, "note": "UI quick edit"})
+            if facts:
+                m = {"id": len(st["messages"]) + 1, "sender": "Organizer (UI Edit)", "role": "organizer", "date": "", "authority": "approved", "facts": facts}
+                main.apply_update(st, m, log)
+                store.message_status(st)
+                checks = validator.validate(main.active(st), st["plan"], log)
+                st["decisions"].append({"run": len(st["decisions"]) + 1, "file": "UI Quick Edit", "entries": log})
+                store.save(st)
+                render(st, checks, len(st["trace"]), log, 0.0)
+            return self._send(200, '{"ok":true}', "application/json")
         if self.path == "/api/reset" or payload.get("reset"):
             shutil.rmtree(".state", ignore_errors=True)
             shutil.rmtree("out", ignore_errors=True)

@@ -303,6 +303,12 @@ function render() {
     if ($("vPrice")) $("vPrice").textContent = fmt(Fd.unit_price || 0) + " each (" + (Fd.tier || "") + ", msg #" + (Fd.price_msg || "?") + ")";
     if ($("vJudges")) $("vJudges").textContent = (J.judges_used || 0) + " of " + (J.pool || 0);
     if ($("vJudgesN")) $("vJudgesN").textContent = "Max " + (J.max_teams_assigned || 0) + " teams each, " + (d.minutes_per_team || 15) + "m/team";
+    if ($("edStudents") && document.activeElement !== $("edStudents")) $("edStudents").value = d.students || 150;
+    if ($("edTeamSize") && document.activeElement !== $("edTeamSize")) $("edTeamSize").value = d.team_size || 3;
+    if ($("edStaff") && document.activeElement !== $("edStaff")) $("edStaff").value = d.staff || 10;
+    if ($("edBudget") && document.activeElement !== $("edBudget")) $("edBudget").value = B.cap || 650000;
+    if ($("edJudges") && document.activeElement !== $("edJudges")) $("edJudges").value = J.pool || 20;
+    if ($("edLunch") && document.activeElement !== $("edLunch")) $("edLunch").value = Fd.unit_price || 1200;
 
     var maxLine = Math.max.apply(null, (B.lines || []).map(function (l) { return l.amount || 1; }).concat([250000]));
     $("bars").innerHTML = (B.lines || []).map(function (l, i) {
@@ -351,25 +357,27 @@ function render() {
         "</span></div><code>" + esc(k.out) + "</code></div>";
     }
     var fullText = "INPUT:\n" + k.inp + "\n\nOUTPUT:\n" + k.out;
-    var shortInp = String(k.inp || "").split("MESSAGES:\n").pop().slice(0, 180).replace(/\s+/g, " ");
-    var shortOut = String(k.out || "").slice(0, 220);
-    var previewText = "In: " + shortInp + (String(k.inp || "").length > 180 ? "…" : "") +
-                      "\nOut: " + shortOut + (String(k.out || "").length > 220 ? "…" : "");
-    var isLong = fullText.length > 420;
+    var msgPart = String(k.inp || "").split("MESSAGES:\n").pop().trim();
+    var msgLines = msgPart.split(/\r?\n/).filter(Boolean);
+    var shortInp = msgLines.length > 2 ? (msgLines.length + " lines (" + msgLines[0].slice(0, 65) + "…)") : msgPart.slice(0, 90);
+    var shortOut = (state.live && state.live.facts)
+      ? ("Extracted " + state.live.facts.length + " normalized facts across " + rows.length + " messages (JSON validated)")
+      : String(k.out || "").slice(0, 100);
+    var previewText = "In:  " + shortInp + "\nOut: " + shortOut;
     return '<div class="call"><div class="h"><b>' + t("callWord") + " #" + k.id + "</b><span>" + esc(k.model) +
       '</span><span class="pill">' + esc(k.area) + '</span><span class="tk">prompt=' + k.ti + " · completion=" + k.to + " · total=" + (k.tot || (k.ti + k.to)) +
       '</span></div><code id="traceShort' + idx + '">' + esc(previewText) + '</code>' +
-      (isLong ? '<code id="traceFull' + idx + '" hidden style="margin-top:6px;max-height:360px;overflow:auto">' + esc(fullText) +
-      '</code><button type="button" class="chip trace-toggle" data-idx="' + idx + '" style="margin-top:8px">Read more ▾</button>' : "") +
+      '<code id="traceFull' + idx + '" style="display:none;margin-top:6px;max-height:320px;overflow:auto">' + esc(fullText) +
+      '</code><button type="button" class="chip trace-toggle" data-idx="' + idx + '" style="margin-top:8px">Read full raw trace ▾</button>' +
       "</div>";
   }).join("") || '<div class="call skip-call"><code>No matching trace entries for "' + esc(q) + '"</code></div>';
   document.querySelectorAll(".trace-toggle").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var i = btn.dataset.idx, sh = $("traceShort" + i), fl = $("traceFull" + i);
-      var open = fl.hidden;
-      fl.hidden = !open;
-      sh.hidden = open;
-      btn.textContent = open ? "Show less ▴" : "Read more ▾";
+      var open = fl.style.display === "none";
+      fl.style.display = open ? "block" : "none";
+      sh.style.display = open ? "none" : "block";
+      btn.textContent = open ? "Hide raw trace ▴" : "Read full raw trace ▾";
     });
   });
   $("tokTot").textContent = tokens.toLocaleString("en-US");
@@ -455,6 +463,71 @@ async function update(text) {
 document.querySelectorAll(".lang button").forEach(function (b) { b.addEventListener("click", function () { setLang(b.dataset.lang); }); });
 $("send").addEventListener("click", function () { update($("msg").value); $("msg").value = ""; });
 $("msg").addEventListener("keydown", function (e) { if (e.key === "Enter") $("send").click(); });
+if ($("applyEditBtn")) {
+  $("applyEditBtn").addEventListener("click", async function () {
+    var payload = {
+      students: +($("edStudents").value || 150),
+      team_size: +($("edTeamSize").value || 3),
+      staff: +($("edStaff").value || 10),
+      budget_cap: +($("edBudget").value || 650000),
+      judges_confirmed: +($("edJudges").value || 20),
+      lunch_standard: +($("edLunch").value || 1200)
+    };
+    if (location.protocol.startsWith("http")) {
+      $("applyEditBtn").textContent = "Recomputing...";
+      try {
+        var r = await fetch("/api/edit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (r.ok) await refreshFromServer();
+      } finally {
+        $("applyEditBtn").textContent = "Apply & Recompute Plan";
+      }
+      return;
+    }
+    // Static file:// instant pure-JS recompute
+    if (state.live && state.live.plan) {
+      var p = state.live.plan, d = p.figures, J = p.judging, V = p.venue, Fd = p.food, B = p.budget;
+      d.students = payload.students;
+      d.team_size = payload.team_size;
+      d.staff = payload.staff;
+      d.teams = Math.ceil(d.students / d.team_size);
+      d.judges_needed = Math.ceil(d.teams / (d.max_teams_per_judge || 3));
+      J.pool = payload.judges_confirmed;
+      J.judges_needed = d.judges_needed;
+      J.judges_used = Math.min(J.pool, d.judges_needed);
+      J.feasible = J.pool >= d.judges_needed;
+      J.honoraria = J.judges_used * (J.fee_per_judge || 5000);
+      var fed = d.students + d.staff + J.judges_used;
+      V.headcount = fed;
+      V.required_capacity = fed;
+      Fd.headcount = fed;
+      Fd.boxes = fed;
+      Fd.unit_price = payload.lunch_standard;
+      Fd.cost = fed * payload.lunch_standard;
+      B.cap = payload.budget_cap;
+      B.available = B.cap + (B.funding || 0);
+      B.lines.forEach(function (l) {
+        if (/^Food/i.test(l.item)) l.amount = Fd.cost;
+        if (/^Judge/i.test(l.item)) { l.item = "Judge honoraria (" + J.judges_used + " x " + (J.fee_per_judge || 5000) + ")"; l.amount = J.honoraria; }
+      });
+      B.total = B.lines.reduce(function (a, b) { return a + b.amount; }, 0);
+      B.remaining = B.available - B.total;
+      if (state.live.checks && state.live.checks.length >= 5) {
+        state.live.checks[0].ok = Fd.boxes >= fed;
+        state.live.checks[0].detail = "teams=" + d.teams + ", judges needed=" + d.judges_needed + ", people to feed=" + fed + ", boxes=" + Fd.boxes;
+        state.live.checks[1].ok = B.total <= B.available;
+        state.live.checks[1].detail = "total " + fmt(B.total) + " vs available " + fmt(B.available) + " (remaining " + fmt(B.remaining) + ")";
+        state.live.checks[2].ok = (V.chosen && V.chosen.capacity >= fed);
+        state.live.checks[4].ok = J.feasible;
+      }
+      calls.push({ skip: true, area: "UI Quick Edit (code, no model call)", out: "Updated parameters: students=" + d.students + ", team_size=" + d.team_size + ", staff=" + d.staff + ", budget_cap=" + B.cap + ", judges=" + J.pool + ", lunch=" + Fd.unit_price + " -> total=" + fmt(B.total) });
+      render();
+    }
+  });
+}
 if ($("uploadBtn") && $("fileInput")) {
   $("uploadBtn").addEventListener("click", function () { $("fileInput").click(); });
   $("fileInput").addEventListener("change", function () {

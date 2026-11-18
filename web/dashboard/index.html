@@ -78,6 +78,25 @@
           <article class="card metric"><div class="lab" data-i18n="m_judges">Judges</div><div class="val" id="vJudges" data-i18n="v_judges">17 of 20</div><span class="pill" id="vJudgesN" data-i18n="v_judges_n">3 teams each, 15 min per team</span></article>
         </section>
 
+        <!-- Quick Edit Controls: directly edit budget, participants, team size, staff, judges, lunch price -->
+        <article class="card" id="quickEditCard" style="margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+            <div>
+              <h2 style="margin:0">Quick Edit Plan Parameters</h2>
+              <p class="d" style="margin:0">Adjust participants, budget cap, team size, staff, judges, or lunch price and recompute instantly in code.</p>
+            </div>
+            <button class="btn" id="applyEditBtn" type="button">Apply &amp; Recompute Plan</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px">
+            <label style="font-size:13px;color:var(--mute)">Students<input id="edStudents" type="number" min="1" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
+            <label style="font-size:13px;color:var(--mute)">Team Size<input id="edTeamSize" type="number" min="1" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
+            <label style="font-size:13px;color:var(--mute)">Staff Count<input id="edStaff" type="number" min="0" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
+            <label style="font-size:13px;color:var(--mute)">Budget Cap (Rs)<input id="edBudget" type="number" min="0" step="5000" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
+            <label style="font-size:13px;color:var(--mute)">Confirmed Judges<input id="edJudges" type="number" min="1" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
+            <label style="font-size:13px;color:var(--mute)">Lunch / Head (Rs)<input id="edLunch" type="number" min="0" step="50" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
+          </div>
+        </article>
+
         <!-- Scroll-linked story: layers separate as you scroll -->
         <section class="story" id="story" aria-labelledby="storyH">
           <div class="stage" id="stage">
