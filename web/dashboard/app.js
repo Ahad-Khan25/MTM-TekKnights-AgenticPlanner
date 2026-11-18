@@ -1,15 +1,21 @@
-/* Mind to Machine · Command Centre
-   Hydrates from real backend state (window.__MTM_DATA__ or /api/state) while keeping EN / UR / Roman Urdu translations. */
+/* Mind to Machine · Animated Command Centre
+   Single-scroll + spatial sidebar navigation, hydrated with real backend state (window.__MTM_DATA__ / /api/state). */
 
 var I18N = {
   en: {
-    skip: "Skip to content", nav_plan: "Plan", nav_schedule: "Schedule", nav_trace: "Trace", nav_messages: "Messages",
+    skip: "Skip to content", nav_overview: "Overview", nav_ops: "Operations", nav_budget: "Budget", nav_dec: "Decisions", views: "Views",
     side_title: "Islamabad · 4 hours", side_body: "150 students, 50 teams, 10 staff, 17 judges.",
     kicker: "Event operations", title: "Executive overview", search: "Search messages and trace",
     ok: "Plan is valid. Every constraint is met.", bad: "Validation check failed. Review the latest change.",
     m_budget: "Budget spent", m_venue: "Venue", m_lunch: "Lunch boxes", m_judges: "Judges",
     v_hall: "Hall A", v_seats: "Seats 200 for 177 people", v_price: "Rs 1,200 each, latest price",
     v_judges: "17 of 20", v_judges_n: "3 teams each, 15 min per team", left: "left of",
+    story_h: "From message to plan", story_hint: "Scroll to pull the plan apart, layer by layer.",
+    s1_t: "Read", s1_d: "A small model reads every message and picks out the facts.",
+    s2_t: "Check", s2_d: "Plain code tests each fact against headcount, seats and judge rules.",
+    s3_t: "Price", s3_d: "Venue, lunch, judges and fixed costs are added up in code.",
+    s4_t: "Lock", s4_d: "The plan is valid only if the total stays inside Rs 650,000.",
+    lay1: "Messages", lay2: "Headcount", lay3: "Committed", lay4: "Plan",
     h_money: "Where the money goes", d_money: "Plain code does the sums. The model only reads messages.", total: "Total committed",
     b_venue: "Venue · Hall A", b_lunch: "Lunch · 177 × Rs 1,200", b_judges: "Judges · 17 × Rs 5,000",
     b_prizes: "Prizes", b_internet: "Backup internet", b_print: "Printing",
@@ -27,13 +33,19 @@ var I18N = {
     menu_open: "Open menu", menu_close: "Close menu"
   },
   ur: {
-    skip: "مواد پر جائیں", nav_plan: "منصوبہ", nav_schedule: "شیڈول", nav_trace: "ٹریس", nav_messages: "پیغامات",
+    skip: "مواد پر جائیں", nav_overview: "جائزہ", nav_ops: "آپریشنز", nav_budget: "بجٹ", nav_dec: "فیصلے", views: "مناظر",
     side_title: "اسلام آباد · 4 گھنٹے", side_body: "150 طلبہ، 50 ٹیمیں، 10 عملہ، 17 جج۔",
     kicker: "ایونٹ کے آپریشنز", title: "ایگزیکٹو جائزہ", search: "پیغامات اور ٹریس میں تلاش کریں",
     ok: "منصوبہ درست ہے۔ تمام شرائط پوری ہیں۔", bad: "منصوبہ بجٹ سے زیادہ ہے۔ تازہ تبدیلی دیکھیں۔",
     m_budget: "خرچ شدہ بجٹ", m_venue: "مقام", m_lunch: "لنچ باکس", m_judges: "جج صاحبان",
     v_hall: "ہال اے", v_seats: "177 افراد کے لیے 200 نشستیں", v_price: "ہر ایک 1,200 روپے، تازہ قیمت",
     v_judges: "20 میں سے 17", v_judges_n: "ہر جج 3 ٹیمیں، فی ٹیم 15 منٹ", left: "باقی از",
+    story_h: "پیغام سے منصوبے تک", story_hint: "نیچے سکرول کریں اور منصوبے کی تہیں کھلتی دیکھیں۔",
+    s1_t: "پڑھنا", s1_d: "چھوٹا ماڈل ہر پیغام پڑھ کر حقائق نکالتا ہے۔",
+    s2_t: "جانچ", s2_d: "سادہ کوڈ ہر حقیقت کو افراد، نشستوں اور ججوں کی شرائط سے پرکھتا ہے۔",
+    s3_t: "قیمت", s3_d: "مقام، لنچ، جج اور مقررہ اخراجات کوڈ میں جمع ہوتے ہیں۔",
+    s4_t: "حتمی", s4_d: "منصوبہ تبھی درست ہے جب کل رقم 650,000 روپے کے اندر رہے۔",
+    lay1: "پیغامات", lay2: "افراد", lay3: "مختص رقم", lay4: "منصوبہ",
     h_money: "رقم کہاں خرچ ہو رہی ہے", d_money: "حساب سادہ کوڈ کرتا ہے۔ ماڈل صرف پیغامات پڑھتا ہے۔", total: "کل مختص رقم",
     b_venue: "مقام · ہال اے", b_lunch: "لنچ · 177 × 1,200 روپے", b_judges: "جج · 17 × 5,000 روپے",
     b_prizes: "انعامات", b_internet: "بیک اپ انٹرنیٹ", b_print: "پرنٹنگ",
@@ -51,13 +63,19 @@ var I18N = {
     menu_open: "مینو کھولیں", menu_close: "مینو بند کریں"
   },
   rm: {
-    skip: "Content par jayein", nav_plan: "Plan", nav_schedule: "Schedule", nav_trace: "Trace", nav_messages: "Messages",
+    skip: "Content par jayein", nav_overview: "Jaiza", nav_ops: "Operations", nav_budget: "Budget", nav_dec: "Faislay", views: "Manazir",
     side_title: "Islamabad · 4 ghante", side_body: "150 students, 50 teams, 10 staff, 17 judges.",
     kicker: "Event operations ki tafseel", title: "Executive jaiza", search: "Messages aur trace mein talash karein",
     ok: "Plan durust hai. Tamam shara'it poori hain.", bad: "Plan budget se zyada hai. Taza tabdeeli dekhein.",
     m_budget: "Kharch shuda budget", m_venue: "Maqam", m_lunch: "Lunch box", m_judges: "Judges",
     v_hall: "Hall A", v_seats: "177 afraad ke liye 200 nashistein", v_price: "Rs 1,200 har ek, taza qeemat",
     v_judges: "20 mein se 17", v_judges_n: "Har judge 3 teams, har team 15 min", left: "baqi az",
+    story_h: "Message se plan tak", story_hint: "Neeche scroll karein aur plan ki tahein khulti dekhein.",
+    s1_t: "Parhna", s1_d: "Chhota model har message parh kar haqaiq nikalta hai.",
+    s2_t: "Jaanch", s2_d: "Simple code har haqeeqat ko afraad, nashiston aur judges ki sharait se parakhta hai.",
+    s3_t: "Qeemat", s3_d: "Maqam, lunch, judges aur muqarrara akhrajaat code mein jama hote hain.",
+    s4_t: "Hatmi", s4_d: "Plan tabhi durust hai jab kul raqam Rs 650,000 ke andar rahe.",
+    lay1: "Messages", lay2: "Afraad", lay3: "Mukhtas raqam", lay4: "Plan",
     h_money: "Paisa kahan ja raha hai", d_money: "Hisaab simple code karta hai. Model sirf messages parhta hai.", total: "Kul mukhtas raqam",
     b_venue: "Maqam · Hall A", b_lunch: "Lunch · 177 × Rs 1,200", b_judges: "Judges · 17 × Rs 5,000",
     b_prizes: "Inaamat", b_internet: "Backup internet", b_print: "Printing",
@@ -78,13 +96,9 @@ var I18N = {
 
 var LANGS = { en: { lang: "en", dir: "ltr" }, ur: { lang: "ur", dir: "rtl" }, rm: { lang: "en", dir: "ltr" } };
 var STATUS_CLASS = { used: "", old: "warn", held: "warn", info: "info", rej: "bad", chg: "" };
+var VIEWS = ["overview", "ops", "budget", "dec"];
 
-var state = { lang: "en", print: 10000, total: 650000, live: null };
-
-var SLOTS = [
-  ["10:00–10:15", "s_checkin", ""], ["10:15–11:10", "s_build", ""], ["11:10–11:55", "s_lunch", "f"],
-  ["11:55–12:10", "s_prayer", "p"], ["12:10–13:00", "s_build", ""], ["13:00–13:45", "s_judging", "j"], ["13:45–14:00", "s_awards", ""]
-];
+var state = { lang: "en", view: "overview", print: 10000, total: 650000, live: null };
 
 var rows = [];
 var calls = [];
@@ -94,10 +108,13 @@ function t(k) { return I18N[state.lang][k] || I18N.en[k] || k; }
 function fmt(n) { return "Rs " + Math.round(n || 0).toLocaleString("en-US"); }
 function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 
+var RM = window.matchMedia("(prefers-reduced-motion: reduce)");
+function reduced() { return RM.matches; }
+
 function hydrateFromBackend(data) {
   if (!data || !data.plan) return;
   state.live = data;
-  var p = data.plan, B = p.budget || {}, V = p.venue || {}, Fd = p.food || {}, J = p.judging || {}, S = p.schedule || {}, d = p.figures || {};
+  var p = data.plan, B = p.budget || {};
   state.total = B.available || 650000;
 
   var mapSt = { ACCEPTED: "used", SUPERSEDED: "old", IGNORED: "held", REJECTED: "rej" };
@@ -120,7 +137,7 @@ function hydrateFromBackend(data) {
   (data.trace || []).forEach(function (c) {
     calls.push({
       id: c.n, area: c.area, model: c.model, inp: c.input, out: c.text,
-      ti: c.prompt_tokens || 0, to: c.completion_tokens || 0, tot: c.total_tokens || 0, secs: c.seconds
+      ti: c.prompt_tokens || 0, to: c.completion_tokens || 0, tot: c.total_tokens || 0
     });
   });
   (data.decisions || []).forEach(function (r) {
@@ -131,11 +148,123 @@ function hydrateFromBackend(data) {
   });
 }
 
+/* ================= Spring physics ================= */
+var fx = [], raf = 0;
+function kick() { if (!raf) raf = requestAnimationFrame(tick); }
+function paint(s) {
+  var x = s.x.toFixed(2), y = s.y.toFixed(2);
+  if (s.k === "mag") s.t.style.transform = "translate3d(" + x + "px," + y + "px,0)";
+  else if (s.k === "tilt") s.t.style.transform = "perspective(800px) rotateX(" + y + "deg) rotateY(" + x + "deg)";
+  else s.t.style.transform = "rotateX(" + (58 + s.y).toFixed(2) + "deg) rotateZ(" + (-42 + s.x).toFixed(2) + "deg)";
+}
+function tick() {
+  raf = 0;
+  var live = false;
+  fx.forEach(function (s) {
+    if (s.rest) return;
+    s.vx = (s.vx + (s.tx - s.x) * 0.14) * 0.78;
+    s.vy = (s.vy + (s.ty - s.y) * 0.14) * 0.78;
+    s.x += s.vx; s.y += s.vy;
+    if (Math.abs(s.vx) + Math.abs(s.vy) < 0.01 && Math.abs(s.tx - s.x) + Math.abs(s.ty - s.y) < 0.02) {
+      s.x = s.tx; s.y = s.ty; s.vx = s.vy = 0; s.rest = true;
+      if (!s.tx && !s.ty) s.t.style.transform = ""; else paint(s);
+    } else { paint(s); live = true; }
+  });
+  if (live) raf = requestAnimationFrame(tick);
+}
+function bind(el, k, host) {
+  if (!el || el._fx) return;
+  var s = { k: k, t: el, x: 0, y: 0, vx: 0, vy: 0, tx: 0, ty: 0, rest: true }, h = host || el;
+  el._fx = s; fx.push(s);
+  h.addEventListener("pointermove", function (e) {
+    if (reduced() || e.pointerType === "touch") return;
+    var r = h.getBoundingClientRect(), dx = (e.clientX - r.left) / r.width - 0.5, dy = (e.clientY - r.top) / r.height - 0.5;
+    if (k === "mag") { s.tx = dx * r.width * 0.22; s.ty = dy * r.height * 0.3; }
+    else if (k === "tilt") { s.tx = dx * 9; s.ty = -dy * 9; }
+    else { s.tx = dx * 16; s.ty = -dy * 10; }
+    s.rest = false; kick();
+  });
+  h.addEventListener("pointerleave", function () { s.tx = s.ty = 0; s.rest = false; kick(); });
+}
+function glow(el) {
+  el.addEventListener("pointermove", function (e) {
+    if (reduced()) return;
+    var r = el.getBoundingClientRect();
+    el.style.setProperty("--mx", (e.clientX - r.left) + "px");
+    el.style.setProperty("--my", (e.clientY - r.top) + "px");
+  }, { passive: true });
+}
+function resetFX() {
+  fx.forEach(function (s) { s.tx = s.ty = 0; s.rest = false; });
+  kick();
+}
+
+/* ================= Scroll-driven story + Single-page Scrollspy ================= */
+var storyEl = $("story"), stage = $("stage"), steps = [].slice.call(document.querySelectorAll(".steps li")),
+    layers = [].slice.call($("stack").children), sIdx = -2, sTick = false;
+
+function setStep(i) {
+  if (i === sIdx) return;
+  sIdx = i;
+  steps.forEach(function (el, n) { el.classList.toggle("on", n === i); });
+  layers.forEach(function (el, n) { el.classList.toggle("on", n === i); });
+}
+function storyUpdate() {
+  sTick = false;
+  if (reduced()) { stage.style.removeProperty("--p"); setStep(-1); return; }
+  if (storyEl && storyEl.offsetParent) {
+    var r = storyEl.getBoundingClientRect(), span = storyEl.offsetHeight - stage.offsetHeight,
+        p = span > 0 ? Math.min(1, Math.max(0, -r.top / span)) : 0;
+    stage.style.setProperty("--p", p.toFixed(3));
+    setStep(Math.min(3, Math.floor(p * 4)));
+  }
+  // Scrollspy: update active sidebar item + 3D plate + ambient glow as user scrolls through the single page
+  var best = state.view, bestDist = 1e9;
+  document.querySelectorAll(".view").forEach(function (sec) {
+    var rect = sec.getBoundingClientRect();
+    var dist = Math.abs(rect.top - 140);
+    if (rect.top <= window.innerHeight * 0.55 && rect.bottom >= 120 && dist < bestDist) {
+      bestDist = dist;
+      best = sec.dataset.view;
+    }
+  });
+  if (best && best !== state.view) {
+    state.view = best;
+    document.body.dataset.view = best;
+    syncView();
+  }
+}
+function queueStory() { if (!sTick) { sTick = true; requestAnimationFrame(storyUpdate); } }
+
+/* ================= Views (All sections visible in single scroll + smooth jump on click) ================= */
 function setDrawer(open) {
   document.body.classList.toggle("drawer-open", open);
   $("scrim").hidden = !open;
   $("menuBtn").setAttribute("aria-expanded", String(open));
   $("menuBtn").setAttribute("aria-label", t(open ? "menu_close" : "menu_open"));
+}
+function titleKey(v) { return v === "overview" ? "title" : "nav_" + v; }
+function syncView() {
+  var v = state.view;
+  document.querySelectorAll(".navb[data-view]").forEach(function (b) {
+    if (b.dataset.view === v) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  document.querySelectorAll(".plate").forEach(function (b) { b.classList.toggle("on", b.dataset.view === v); });
+  $("sceneLabel").textContent = t("nav_" + v);
+  var h = $("pageTitle"); h.dataset.i18n = titleKey(v); h.textContent = t(titleKey(v));
+  document.title = "Mind to Machine · " + t(titleKey(v));
+}
+function showView(v) {
+  setDrawer(false);
+  if (VIEWS.indexOf(v) < 0) return;
+  var target = document.querySelector('.view[data-view="' + v + '"]');
+  state.view = v;
+  document.body.dataset.view = v;
+  syncView();
+  try { history.replaceState(null, "", "#" + v); } catch (e) { /* ignore */ }
+  if (target) {
+    target.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+  }
 }
 
 function applyStatic() {
@@ -144,9 +273,10 @@ function applyStatic() {
   document.documentElement.dir = cfg.dir;
   document.querySelectorAll("[data-i18n]").forEach(function (el) { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll("[data-i18n-ph]").forEach(function (el) { el.placeholder = t(el.dataset.i18nPh); });
+  document.querySelectorAll("[data-i18n-al]").forEach(function (el) { el.setAttribute("aria-label", t(el.dataset.i18nAl)); });
   document.querySelectorAll(".lang button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.lang === state.lang)); });
-  document.title = "Mind to Machine · " + t("title");
   setDrawer(document.body.classList.contains("drawer-open"));
+  syncView();
 }
 
 function render() {
@@ -162,6 +292,10 @@ function render() {
     $("mSpent").textContent = fmt(B.total);
     $("mLeft").textContent = fmt(Math.abs(B.remaining)) + " " + t("left") + " " + fmt(B.available);
     $("tot").textContent = fmt(B.total);
+    $("lv1").textContent = rows.length;
+    $("lv2").textContent = V.headcount || 177;
+    $("lv3").textContent = fmt(B.total);
+    $("lv4").textContent = allOk ? "✓" : "✕";
 
     if ($("vHall")) $("vHall").textContent = (ch.name || "NONE").replace(/_/g, " ").replace(/\b\w/g, function (l) { return l.toUpperCase(); });
     if ($("vSeats")) $("vSeats").textContent = "Seats " + (ch.capacity || 0) + " for " + (V.headcount || 0) + " people (" + fmt(ch.price || 0) + ")";
@@ -173,7 +307,7 @@ function render() {
     var maxLine = Math.max.apply(null, (B.lines || []).map(function (l) { return l.amount || 1; }).concat([250000]));
     $("bars").innerHTML = (B.lines || []).map(function (l, i) {
       return '<div class="bar' + (i < 3 ? "" : " r") + '"><div class="t"><span>' + esc(l.item) + "</span><span>" + fmt(l.amount) +
-        '</span></div><div class="track"><div class="fill" style="width:' + Math.min(100, (l.amount / maxLine * 100)).toFixed(1) + '%"></div></div></div>';
+        '</span></div><div class="track"><div class="fill" style="transform:scaleX(' + Math.min(1, (l.amount || 0) / maxLine).toFixed(3) + ')"></div></div></div>';
     }).join("");
 
     $("banner").className = "banner" + (allOk ? "" : " bad");
@@ -261,7 +395,7 @@ async function update(text) {
       });
       if (r.ok) {
         await refreshFromServer();
-        $("trace").scrollIntoView({ behavior: "smooth" });
+        $("trace").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
         return;
       }
     } catch (e) { /* fallback below */ }
@@ -270,7 +404,6 @@ async function update(text) {
       btn.textContent = t("update");
     }
   }
-  // Offline static file:// fallback
   var cost = m.match(/Rs\s?([\d,]+).*?not\s*Rs\s?([\d,]+)/i), box = m.match(/(\d+)\s*boxes/i), area, out, st, why;
   if (box && +box[1] < 177) {
     area = "food"; st = "rej";
@@ -292,10 +425,10 @@ async function update(text) {
   calls.push({ area: "Code decision", skip: true, out: why + " (" + out + ")" });
   rows.push({ n: rows.length + 1, from: "New message", text: m, st: st, rawStatus: st === "rej" ? "REJECTED" : st === "chg" ? "ACCEPTED" : "IGNORED", why: why });
   render();
-  $("trace").scrollIntoView({ behavior: "smooth" });
+  $("trace").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
 }
 
-/* ---------- Events ---------- */
+/* ================= Wiring ================= */
 document.querySelectorAll(".lang button").forEach(function (b) { b.addEventListener("click", function () { setLang(b.dataset.lang); }); });
 $("send").addEventListener("click", function () { update($("msg").value); $("msg").value = ""; });
 $("msg").addEventListener("keydown", function (e) { if (e.key === "Enter") $("send").click(); });
@@ -309,29 +442,45 @@ if ($("resetBtn")) {
     }
   });
 }
+if ($("backIntroLink")) {
+  $("backIntroLink").addEventListener("click", function (e) {
+    if (typeof window.__MTM_SHOW_INTRO__ === "function") {
+      e.preventDefault();
+      window.__MTM_SHOW_INTRO__();
+    }
+  });
+}
 document.querySelectorAll(".chip").forEach(function (b) { b.addEventListener("click", function () { $("msg").value = b.dataset.m; }); });
 $("q").addEventListener("input", render);
 
 $("menuBtn").addEventListener("click", function () { setDrawer(!document.body.classList.contains("drawer-open")); });
 $("scrim").addEventListener("click", function () { setDrawer(false); });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape") setDrawer(false); });
-window.addEventListener("resize", function () { if (window.innerWidth >= 768) setDrawer(false); });
 
-document.querySelectorAll("nav a").forEach(function (a) {
-  a.addEventListener("click", function (e) {
-    if (a.id === "backIntroLink" && typeof window.__MTM_SHOW_INTRO__ === "function") {
-      e.preventDefault();
-      window.__MTM_SHOW_INTRO__();
-      return;
-    }
-    document.querySelectorAll("nav a").forEach(function (x) { x.classList.remove("on"); });
-    a.classList.add("on");
-    setDrawer(false);
-  });
+document.querySelectorAll(".navb[data-view], .plate").forEach(function (b) {
+  b.addEventListener("click", function () { showView(b.dataset.view); });
 });
+document.querySelectorAll(".plate").forEach(function (b) {
+  b.addEventListener("pointerenter", function () { $("sceneLabel").textContent = t("nav_" + b.dataset.view); });
+  b.addEventListener("pointerleave", function () { $("sceneLabel").textContent = t("nav_" + state.view); });
+});
+
+/* Micro-interactions: magnetic buttons, tilting KPI cards, cursor glow on every card, parallax 3D scene */
+document.querySelectorAll(".btn, .chip, .lang button").forEach(function (el) { bind(el, "mag"); });
+document.querySelectorAll(".metric").forEach(function (el) { bind(el, "tilt"); });
+document.querySelectorAll(".card").forEach(glow);
+bind($("iso"), "iso", $("scene"));
+
+window.addEventListener("scroll", queueStory, { passive: true });
+window.addEventListener("resize", function () { if (window.innerWidth >= 768) setDrawer(false); queueStory(); });
+var onRM = function () { resetFX(); queueStory(); };
+if (RM.addEventListener) RM.addEventListener("change", onRM); else if (RM.addListener) RM.addListener(onRM);
 
 var saved = "en";
 try { saved = localStorage.getItem("m2m-lang") || "en"; } catch (e) { /* ignore */ }
+var startView = (location.hash || "").slice(1);
 if (window.__MTM_DATA__) hydrateFromBackend(window.__MTM_DATA__);
 setLang(I18N[saved] ? saved : "en");
+if (VIEWS.indexOf(startView) > 0) showView(startView);
+queueStory();
 refreshFromServer();

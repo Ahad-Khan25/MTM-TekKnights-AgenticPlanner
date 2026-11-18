@@ -9,8 +9,9 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Nastaliq+Urdu:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="styles.css">
 </head>
-<body>
+<body data-view="overview">
 <a class="skip" href="#main" data-i18n="skip">Skip to content</a>
+<div class="ambient" aria-hidden="true"></div>
 
 <div class="topbar">
   <button class="menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
@@ -26,12 +27,24 @@
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="16" fill="none" stroke="rgba(255,255,255,.22)"/><path d="M17 28V14M17 18c-6 0-8-4-8-8 5 0 8 2 8 8zm0 3c5 0 8-3 8-7-5 0-8 2-8 7z" fill="#34d399"/></svg>
       <span>Mind to<br>Machine</span>
     </div>
-    <nav aria-label="Sections">
-      <a class="on" href="#overview" data-i18n="nav_plan">Plan</a>
-      <a href="#schedule" data-i18n="nav_schedule">Schedule</a>
-      <a href="#trace"><span data-i18n="nav_trace">Trace</span><small id="nCalls">1</small></a>
-      <a href="#messages"><span data-i18n="nav_messages">Messages</span><small id="nRej">3</small></a>
-      <a href="index.html" id="backIntroLink">← Intro</a>
+
+    <!-- Spatial navigation: four floating tiles in a lightweight CSS 3D scene -->
+    <div class="scene" id="scene" role="group" aria-label="Views" data-i18n-al="views">
+      <div class="iso" id="iso">
+        <button class="plate" type="button" tabindex="-1" aria-hidden="true" data-view="overview" style="--x:0;--y:0;--c:#3b82f6"><svg viewBox="0 0 24 24"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z"/></svg></button>
+        <button class="plate" type="button" tabindex="-1" aria-hidden="true" data-view="ops" style="--x:1;--y:0;--c:#10b981"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 7v5l3 2"/></svg></button>
+        <button class="plate" type="button" tabindex="-1" aria-hidden="true" data-view="budget" style="--x:0;--y:1;--c:#d97706"><svg viewBox="0 0 24 24"><path d="M12 3v18M16 7h-6a3 3 0 000 6h4a3 3 0 010 6H8"/></svg></button>
+        <button class="plate" type="button" tabindex="-1" aria-hidden="true" data-view="dec" style="--x:1;--y:1;--c:#6366f1"><svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></svg></button>
+      </div>
+    </div>
+    <p class="scene-label" id="sceneLabel" aria-hidden="true"></p>
+
+    <nav aria-label="Sections" id="nav">
+      <button class="navb" type="button" data-view="overview"><span data-i18n="nav_overview">Overview</span></button>
+      <button class="navb" type="button" data-view="ops"><span data-i18n="nav_ops">Operations</span><small id="nCalls">1</small></button>
+      <button class="navb" type="button" data-view="budget"><span data-i18n="nav_budget">Budget</span></button>
+      <button class="navb" type="button" data-view="dec"><span data-i18n="nav_dec">Decisions</span><small id="nRej">3</small></button>
+      <a class="navb" href="index.html" id="backIntroLink"><span>← Animated Intro</span></a>
     </nav>
     <div class="side-note"><b data-i18n="side_title">Islamabad · 4 hours</b><span data-i18n="side_body">150 students, 50 teams, 10 staff, 17 judges.</span></div>
   </aside>
@@ -41,7 +54,7 @@
       <header>
         <div class="titles">
           <p class="kicker" data-i18n="kicker">Event operations</p>
-          <h1 id="overview" data-i18n="title">Executive overview</h1>
+          <h1 id="pageTitle" data-i18n="title">Executive overview</h1>
         </div>
         <div class="tools">
           <label class="search"><span aria-hidden="true">⌕</span><input id="q" type="search" data-i18n-ph="search" placeholder="Search messages and trace" aria-label="Search"></label>
@@ -53,54 +66,91 @@
         </div>
       </header>
 
-      <div class="banner" id="banner" role="status"><span class="dot"></span><span id="bannerText"></span></div>
-      <div class="chips" id="sixChecksBar" style="margin-bottom:16px"></div>
+      <!-- VIEW 1: Overview (Single-page scroll: all 4 sections are visible in one continuous scroll AND jump-accessible via sidebar) -->
+      <section class="view enter" id="sec-overview" data-view="overview" style="margin-bottom:24px">
+        <div class="banner" id="banner" role="status"><span class="dot"></span><span id="bannerText"></span></div>
+        <div class="chips" id="sixChecksBar" style="margin-bottom:16px"></div>
 
-      <section class="grid cards" aria-label="Key figures">
-        <article class="card metric"><div class="lab" data-i18n="m_budget">Budget spent</div><div class="val" id="mSpent"></div><span class="pill warn" id="mLeft"></span></article>
-        <article class="card metric"><div class="lab" data-i18n="m_venue">Venue</div><div class="val" id="vHall" data-i18n="v_hall">Hall A</div><span class="pill" id="vSeats" data-i18n="v_seats">Seats 200 for 177 people</span></article>
-        <article class="card metric"><div class="lab" data-i18n="m_lunch">Lunch boxes</div><div class="val" id="vBoxes">177</div><span class="pill" id="vPrice" data-i18n="v_price">Rs 1,200 each, latest price</span></article>
-        <article class="card metric"><div class="lab" data-i18n="m_judges">Judges</div><div class="val" id="vJudges" data-i18n="v_judges">17 of 20</div><span class="pill" id="vJudgesN" data-i18n="v_judges_n">3 teams each, 15 min per team</span></article>
+        <section class="grid cards" aria-label="Key figures">
+          <article class="card metric"><div class="lab" data-i18n="m_budget">Budget spent</div><div class="val" id="mSpent"></div><span class="pill warn" id="mLeft"></span></article>
+          <article class="card metric"><div class="lab" data-i18n="m_venue">Venue</div><div class="val" id="vHall" data-i18n="v_hall">Hall A</div><span class="pill" id="vSeats" data-i18n="v_seats">Seats 200 for 177 people</span></article>
+          <article class="card metric"><div class="lab" data-i18n="m_lunch">Lunch boxes</div><div class="val" id="vBoxes">177</div><span class="pill" id="vPrice" data-i18n="v_price">Rs 1,200 each, latest price</span></article>
+          <article class="card metric"><div class="lab" data-i18n="m_judges">Judges</div><div class="val" id="vJudges" data-i18n="v_judges">17 of 20</div><span class="pill" id="vJudgesN" data-i18n="v_judges_n">3 teams each, 15 min per team</span></article>
+        </section>
+
+        <!-- Scroll-linked story: layers separate as you scroll -->
+        <section class="story" id="story" aria-labelledby="storyH">
+          <div class="stage" id="stage">
+            <div class="prog" aria-hidden="true"><i></i></div>
+            <div class="copy">
+              <h2 id="storyH" data-i18n="story_h">From message to plan</h2>
+              <p class="d" data-i18n="story_hint">Scroll to pull the plan apart, layer by layer.</p>
+              <ol class="steps">
+                <li><h3 data-i18n="s1_t">Read</h3><p data-i18n="s1_d">A small model reads every message and picks out the facts.</p></li>
+                <li><h3 data-i18n="s2_t">Check</h3><p data-i18n="s2_d">Plain code tests each fact against headcount, seats and judge rules.</p></li>
+                <li><h3 data-i18n="s3_t">Price</h3><p data-i18n="s3_d">Venue, lunch, judges and fixed costs are added up in code.</p></li>
+                <li><h3 data-i18n="s4_t">Lock</h3><p data-i18n="s4_d">The plan is valid only if the total stays inside Rs 650,000.</p></li>
+              </ol>
+            </div>
+            <div class="viz" aria-hidden="true">
+              <div class="stack" id="stack">
+                <div class="layer" style="--i:0;--c:#60a5fa"><b data-i18n="lay1">Messages</b><span id="lv1"></span></div>
+                <div class="layer" style="--i:1;--c:#34d399"><b data-i18n="lay2">Headcount</b><span id="lv2">177</span></div>
+                <div class="layer" style="--i:2;--c:#fbbf24"><b data-i18n="lay3">Committed</b><span id="lv3"></span></div>
+                <div class="layer" style="--i:3;--c:#a5b4fc"><b data-i18n="lay4">Plan</b><span id="lv4"></span></div>
+              </div>
+            </div>
+          </div>
+        </section>
       </section>
 
-      <section class="grid two">
+      <!-- VIEW 2: Operations -->
+      <section class="view enter" id="sec-ops" data-view="ops" style="margin-bottom:24px">
+        <div class="grid two ops">
+          <article class="card" id="schedule">
+            <h2 data-i18n="h_sched">Schedule</h2>
+            <p class="d" data-i18n="d_sched">240 minutes, with a 15-minute prayer break.</p>
+            <div class="tl" id="tl"></div>
+          </article>
+          <article class="card" id="trace">
+            <h2 data-i18n="h_trace">Trace</h2>
+            <p class="d" data-i18n="d_trace">Every model call, numbered, with its area, input, output and tokens.</p>
+            <div class="feed">
+              <input id="msg" type="text" data-i18n-ph="paste" placeholder="Paste a new message" aria-label="New message">
+              <button class="btn" id="send" type="button" data-i18n="update">Update plan</button>
+              <button class="btn" id="resetBtn" type="button" style="background:#e11d48">Reset Pack</button>
+            </div>
+            <div class="chips"><span data-i18n="try">Try:</span>
+              <button class="chip" type="button" data-m="Finance here. The printing bill came in at Rs 15,000, not Rs 10,000." data-i18n="chip1">Printing bill change</button>
+              <button class="chip" type="button" data-m="Caterer: I have rounded your order down to 100 boxes to keep the cost low." data-i18n="chip2">Caterer rounds down</button>
+            </div>
+            <div id="calls"></div>
+            <p class="tot"><span data-i18n="tokens">Total tokens</span> <b id="tokTot">0</b> · <span id="callTot">0</span> <span data-i18n="callsWord">calls</span></p>
+            <p class="demo" data-i18n="demo">Token counts are reported directly by the provider API (prompt / completion / total).</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- VIEW 3: Budget -->
+      <section class="view enter" id="sec-budget" data-view="budget" style="margin-bottom:24px">
         <article class="card">
           <h2 data-i18n="h_money">Where the money goes</h2>
           <p class="d" data-i18n="d_money">Plain code does the sums. The model only reads messages.</p>
           <div class="bars" id="bars"></div>
           <div class="total"><span data-i18n="total">Total committed</span><b id="tot"></b></div>
         </article>
-        <article class="card" id="schedule">
-          <h2 data-i18n="h_sched">Schedule</h2>
-          <p class="d" data-i18n="d_sched">240 minutes, with a 15-minute prayer break.</p>
-          <div class="tl" id="tl"></div>
+      </section>
+
+      <!-- VIEW 4: Decisions -->
+      <section class="view enter" id="sec-dec" data-view="dec" style="margin-bottom:24px">
+        <article class="card" id="messages">
+          <h2 data-i18n="h_msgs">Messages</h2>
+          <p class="d" data-i18n="d_msgs">What each message did to the plan, and why.</p>
+          <div class="tblwrap"><table>
+            <thead><tr><th>#</th><th data-i18n="c_from">From</th><th data-i18n="c_msg">Message</th><th data-i18n="c_status">Status</th></tr></thead>
+            <tbody id="rows"></tbody>
+          </table></div>
         </article>
-      </section>
-
-      <section class="card block" id="trace">
-        <h2 data-i18n="h_trace">Trace</h2>
-        <p class="d" data-i18n="d_trace">Every model call, numbered, with its area, input, output and tokens.</p>
-        <div class="feed">
-          <input id="msg" type="text" data-i18n-ph="paste" placeholder="Paste a new message" aria-label="New message">
-          <button class="btn" id="send" type="button" data-i18n="update">Update plan</button>
-          <button class="btn" id="resetBtn" type="button" style="background:#e11d48">Reset Pack</button>
-        </div>
-        <div class="chips"><span data-i18n="try">Try:</span>
-          <button class="chip" type="button" data-m="Finance here. The printing bill came in at Rs 15,000, not Rs 10,000." data-i18n="chip1">Printing bill change</button>
-          <button class="chip" type="button" data-m="Caterer: I have rounded your order down to 100 boxes to keep the cost low." data-i18n="chip2">Caterer rounds down</button>
-        </div>
-        <div id="calls"></div>
-        <p class="tot"><span data-i18n="tokens">Total tokens</span> <b id="tokTot">0</b> · <span id="callTot">0</span> <span data-i18n="callsWord">calls</span></p>
-        <p class="demo" data-i18n="demo">Token counts are demo values. Your real trace must print the counts the model reports.</p>
-      </section>
-
-      <section class="card block" id="messages">
-        <h2 data-i18n="h_msgs">Messages</h2>
-        <p class="d" data-i18n="d_msgs">What each message did to the plan, and why.</p>
-        <div class="tblwrap"><table>
-          <thead><tr><th>#</th><th data-i18n="c_from">From</th><th data-i18n="c_msg">Message</th><th data-i18n="c_status">Status</th></tr></thead>
-          <tbody id="rows"></tbody>
-        </table></div>
       </section>
     </div>
   </main>
