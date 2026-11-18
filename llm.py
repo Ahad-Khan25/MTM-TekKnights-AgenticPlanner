@@ -1,12 +1,12 @@
 """Thin provider interface. Selected by env vars; token counts are copied from the provider response, never estimated.
 
-LLM_PROVIDER = ollama | openai | anthropic   (openai = any OpenAI-compatible API, e.g. OpenRouter, Groq)
+LLM_PROVIDER = ollama | openai | anthropic   (openai = any OpenAI-compatible API, e.g. Groq, OpenRouter)
 LLM_MODEL    = model name
 LLM_BASE_URL = optional override
 LLM_API_KEY  = key for openai/anthropic (falls back to GROQ_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY)
-Default: Groq (OpenAI-compatible) with llama-3.1-8b-instant, a small 8B model.
+Default: Groq (OpenAI-compatible) with openai/gpt-oss-20b (small open-weight model).
 """
-import json, os, time, urllib.request
+import json, os, time, urllib.error, urllib.request
 
 
 def _load_dotenv(path=".env"):
@@ -19,7 +19,8 @@ def _load_dotenv(path=".env"):
 
 _load_dotenv()
 PROVIDER = os.getenv("LLM_PROVIDER", "openai")
-MODEL = os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
+MODEL = os.getenv("LLM_MODEL", "openai/gpt-oss-20b")
+EFFORT = os.getenv("LLM_REASONING_EFFORT")
 KEY = os.getenv("LLM_API_KEY") or os.getenv("GROQ_API_KEY") or os.getenv("OPENAI_API_KEY") or os.getenv("ANTHROPIC_API_KEY", "")
 BASE = os.getenv("LLM_BASE_URL") or {
     "ollama": "http://localhost:11434",
@@ -29,9 +30,12 @@ BASE = os.getenv("LLM_BASE_URL") or {
 
 
 def _post(url, body, headers):
-    req = urllib.request.Request(url, json.dumps(body).encode(), {"Content-Type": "application/json", **headers})
-    with urllib.request.urlopen(req, timeout=100) as r:
-        return json.loads(r.read())
+    req = urllib.request.Request(url, json.dumps(body).encode(), {"Content-Type": "application/json", "User-Agent": "mind-to-machine/1.0", **headers})
+    try:
+        with urllib.request.urlopen(req, timeout=100) as r:
+            return json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"LLM API error {e.code}: {e.read().decode()[:400]}") from None
 
 
 def chat(system, user):
@@ -48,11 +52,13 @@ def chat(system, user):
                   {"x-api-key": KEY, "anthropic-version": "2023-06-01"})
         u = r["usage"]
         text, p, c, model = r["content"][0]["text"], u["input_tokens"], u["output_tokens"], r.get("model", MODEL)
-        tot = p + c  # Anthropic reports input/output only; total is their sum
+        tot = p + c
     else:
-        r = _post(f"{BASE}/chat/completions", {"model": MODEL, "temperature": 0, "response_format": {"type": "json_object"},
-                                               "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]},
-                  {"Authorization": f"Bearer {KEY}"})
+        body = {"model": MODEL, "temperature": 0,
+                "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
+        if EFFORT:
+            body["reasoning_effort"] = EFFORT
+        r = _post(f"{BASE}/chat/completions", body, {"Authorization": f"Bearer {KEY}"})
         u = r["usage"]
         text, p, c, tot, model = r["choices"][0]["message"]["content"], u["prompt_tokens"], u["completion_tokens"], u["total_tokens"], r.get("model", MODEL)
     return {"model": model, "text": text, "prompt_tokens": p, "completion_tokens": c, "total_tokens": tot,

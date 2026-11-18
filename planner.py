@@ -9,7 +9,7 @@ DEPS = {"judging": {"venue", "schedule", "food", "budget"}, "venue": {"schedule"
 FACT_AREAS = {"core": {"judging"}, "judging": {"judging"}, "venue": {"venue"}, "schedule": {"schedule"},
               "food": {"food"}, "budget": {"budget"}, "funding": {"budget"}}
 # design defaults for blocks no message specifies (not pack facts; overridden by schedule rules)
-BLOCK_DEFAULTS = {"opening_min": 15, "lunch_min": 45, "closing_min": 15, "start_time": "10:00"}
+BLOCK_DEFAULTS = {"total_min": 240, "opening_min": 15, "lunch_min": 45, "prayer_min": 15, "closing_min": 15, "start_time": "10:00"}
 
 
 def num(v):
@@ -20,8 +20,8 @@ def num(v):
 
 
 def t2m(t):
-    hh, mm = re.match(r"(\d{1,2}):(\d{2})", str(t)).groups()
-    return int(hh) * 60 + int(mm)
+    m = re.match(r"(\d{1,2}):(\d{1,2})", str(t or ""))
+    return int(m.group(1)) * 60 + int(m.group(2)) if m else 0
 
 
 def m2t(m):
@@ -37,7 +37,7 @@ def rules(F):
 
 
 def rule(F, field, ops=("equals", "min", "max")):
-    vals = [r["value"] for r in rules(F) if r["field"] == field and r["op"] in ops]
+    vals = [r.get("value") for r in rules(F) if r["field"] == field and r["op"] in ops]
     return vals[-1] if vals else None
 
 
@@ -82,9 +82,9 @@ def venue(F, d, J):
     fed = headcount_fed(d, J)
     buf = num(rule(F, "capacity_buffer_pct")) or 0
     need = math.ceil(fed * (1 + buf / 100))
-    feats = [str(x).lower() for r in rules(F) if r["area"] == "venue" and r["op"] == "require"
+    feats = [str(x).lower() for r in rules(F) if r["area"] == "venue" and r["op"] == "require" and r.get("value")
              for x in (r["value"] if isinstance(r["value"], list) else [r["value"]])]
-    banned = [str(r["value"]).lower() for r in rules(F) if r["area"] == "venue" and r["op"] == "forbid"]
+    banned = [str(r["value"]).lower() for r in rules(F) if r["area"] == "venue" and r["op"] == "forbid" and r.get("value")]
     min_cap = num(rule(F, "capacity", ("min",))) or 0
     length = total_minutes(F)
     chosen, rejected = None, []
@@ -110,7 +110,7 @@ def venue(F, d, J):
 
 def total_minutes(F):
     L = num(rule(F, "total_min"))
-    return int(L * 60 if L and L <= 24 else L) if L else None  # "4" means hours
+    return int(L * 60 if L and L <= 24 else L) if L else BLOCK_DEFAULTS["total_min"]
 
 
 def schedule(F, d, J, V):
@@ -152,11 +152,11 @@ def food(F, d, J, downgrade=0):
     if override:
         boxes = int(num(override[-1]["value"]["value"]))
     prices = of_kind(F, "unit_price")
-    tiers = sorted([f for f in prices if f.get("scope") == "meal"], key=lambda f: -num(f["value"]))
+    tiers = sorted([f for f in prices if f.get("scope") == "meal" and (num(f["value"]) or 0) > 0],
+                   key=lambda f: (0 if "standard" in f["key"] else 1, num(f["value"]) or 0))
     if not tiers:
         return {"boxes": boxes, "headcount": fed, "error": "no meal price stated"}
-    base = next((i for i, f in enumerate(tiers) if "standard" in f["key"]), 0)
-    i = min(base + downgrade, len(tiers) - 1)
+    i = min(downgrade, len(tiers) - 1)
     tier = tiers[i]
     cost = boxes * num(tier["value"])
     heads = {f["key"]: num(f["value"]) for f in of_kind(F, "headcount")}

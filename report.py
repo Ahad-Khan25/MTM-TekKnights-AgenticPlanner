@@ -1,5 +1,5 @@
-"""Output: stdout report, out/trace.txt, out/plan.json, out/report.html (self-contained)."""
-import html, json, os
+"""Output: stdout report, out/trace.txt, out/plan.json, out/report.html (self-contained), and optional HTTP server for Render/Docker."""
+import html, http.server, json, os, shutil, tempfile
 
 BAR = "=" * 78
 
@@ -93,12 +93,72 @@ li{{margin:6px 0}}.bar{{background:#334155;border-radius:6px;height:22px;overflo
 pre{{white-space:pre-wrap;background:#020617;padding:10px;border-radius:6px;font-size:12px}}details{{border:1px solid #475569;border-radius:6px;margin:6px 0;padding:8px}}
 table{{border-collapse:collapse;width:100%}}td,th{{border:1px solid #475569;padding:6px;text-align:left;font-size:14px}}
 tr.REJECTED td{{background:#7f1d1d;color:#fff;font-weight:bold}}tr.ACCEPTED td:nth-child(2){{color:#4ade80}}tr.IGNORED td:nth-child(2),tr.SUPERSEDED td:nth-child(2){{color:#fbbf24}}
+textarea{{width:100%;background:#020617;color:#f1f5f9;border:1px solid #475569;border-radius:6px;padding:8px;font-family:monospace}}
+.btn{{background:#0284c7;color:#fff;border:0;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:bold;margin-right:6px}}
 </style></head><body><h1>Mind to Machine &mdash; Hackathon Plan</h1>
 <div class=tabs><button class=on onclick="t(0)">Plan</button><button onclick="t(1)">Trace</button><button onclick="t(2)">Messages</button></div>
 <div class="tab on"><h3>Budget: Rs {B['total']:,.0f} of Rs {B['available']:,.0f} (remaining Rs {B['remaining']:,.0f})</h3><div class=bar><div class=fill style="width:{pct:.1f}%"></div></div><br>
 <div class=grid>{cards}</div><h3>Six checks</h3><ul>{chk}</ul></div>
 <div class=tab><p>{len(st['trace'])} model call(s), TOTAL tokens <b>{run}</b>. Token counts copied from the provider API response.</p>{tr}<h3>Decision log (code, no model call)</h3>{dl}</div>
 <div class=tab><table><tr><th>#</th><th>Status</th><th>Sender</th><th>Date</th><th>Reason</th></tr>{ms}</table></div>
-<script>function t(i){{document.querySelectorAll('.tab').forEach((x,j)=>x.classList.toggle('on',i==j));document.querySelectorAll('.tabs button').forEach((x,j)=>x.classList.toggle('on',i==j))}}</script>
-</body></html>"""
+<script>
+function t(i){{document.querySelectorAll('.tab').forEach((x,j)=>x.classList.toggle('on',i==j));document.querySelectorAll('.tabs button').forEach((x,j)=>x.classList.toggle('on',i==j))}}
+if(location.protocol.startsWith('http')){{
+  const d=document.createElement('div');d.style='margin-top:16px;background:#1e293b;padding:14px;border-radius:8px;border:1px solid #475569';
+  d.innerHTML='<h3>Live Update (Web / Render mode)</h3><textarea id=m rows=3 placeholder="Paste new message(s) or full pack..."></textarea><br><br><button class=btn onclick="send(false)">Send Message(s)</button><button class=btn style="background:#dc2626" onclick="send(true)">Reset State & Run</button><span id=st></span>';
+  document.body.appendChild(d);
+}}
+async function send(reset){{
+  document.getElementById('st').textContent='Running...';
+  const r=await fetch(reset?'/api/reset':'/api/run',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify({{text:document.getElementById('m').value}})}});
+  if(r.ok)location.reload();else document.getElementById('st').textContent='Error: '+await r.text();
+}}
+</script></body></html>"""
     open("out/report.html", "w", encoding="utf-8").write(page)
+
+
+class _Handler(http.server.BaseHTTPRequestHandler):
+    def _send(self, code, body, ctype="text/html; charset=utf-8"):
+        self.send_response(code)
+        self.send_header("Content-Type", ctype)
+        self.end_headers()
+        self.wfile.write(body.encode("utf-8") if isinstance(body, str) else body)
+
+    def do_GET(self):
+        if self.path == "/api/health":
+            return self._send(200, '{"status":"ok"}', "application/json")
+        if self.path == "/api/plan" and os.path.exists("out/plan.json"):
+            return self._send(200, open("out/plan.json", encoding="utf-8").read(), "application/json")
+        if self.path == "/api/trace" and os.path.exists("out/trace.txt"):
+            return self._send(200, open("out/trace.txt", encoding="utf-8").read(), "text/plain; charset=utf-8")
+        if not os.path.exists("out/report.html") and os.path.exists("data/sample_pack.txt"):
+            import main
+            main.main("data/sample_pack.txt")
+        body = open("out/report.html", encoding="utf-8").read() if os.path.exists("out/report.html") else "<h1>Ready</h1>"
+        self._send(200, body)
+
+    def do_POST(self):
+        import main
+        n = int(self.headers.get("Content-Length", 0))
+        payload = json.loads(self.rfile.read(n) or b"{}")
+        if self.path == "/api/reset":
+            shutil.rmtree(".state", ignore_errors=True)
+            shutil.rmtree("out", ignore_errors=True)
+        txt = (payload.get("text") or "").strip()
+        if txt:
+            with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:
+                f.write(txt)
+                tmp = f.name
+            try:
+                main.main(tmp)
+            finally:
+                os.remove(tmp)
+        elif self.path == "/api/reset" and os.path.exists("data/sample_pack.txt"):
+            main.main("data/sample_pack.txt")
+        self._send(200, '{"ok":true}', "application/json")
+
+
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", "8000"))
+    print(f"Serving Mind to Machine on http://0.0.0.0:{port}")
+    http.server.HTTPServer(("0.0.0.0", port), _Handler).serve_forever()

@@ -64,7 +64,7 @@ def add_message(st, m, log):
                 "note": f.get("note", ""), "seq": len(st["facts"]), "status": "active"}
         if f["kind"] in ("request", "irrelevant"):
             fact["status"] = f"ignored: {f['kind']}"
-        elif msg["authority"] == "quote_or_request" and f["kind"] not in OFFERS:
+        elif msg["authority"] == "quote_or_request" and (f["kind"] in ("request", "irrelevant") or msg["role"] in ("student", "other")):
             fact["status"] = "ignored: unapproved request/quote"
         elif not allowed(msg["role"], f):
             fact["status"] = f"ignored: sender role '{msg['role']}' has no authority over {area_of(f)}"

@@ -20,4 +20,4 @@ messages file ──► store.new_text (hash lines, keep unseen) ──► reade
 - **One model call per run** (batch for the first pack, one per update): language needs a model, arithmetic does not. Tag is always `reading`, so for any update the prediction is: *areas that make model calls = [reading]*.
 - **Reject rule**: a new message is rejected if applying it makes any of the six checks go from PASS to FAIL; the previous plan is restored and the failing numbers are printed.
 - **Defaults** that no message states (opening/closing 15 min, lunch 45 min, start 10:00) are generic design choices, overridden by any schedule rule in the messages; they are not pack facts.
-- **Small model**: `llama-3.1-8b-instant` (8B) via Groq for speed; Ollama supported for fully local runs.
+- **Small model**: `openai/gpt-oss-20b` (open-weight 20B model, `reasoning_effort=low`) via Groq for <4s full-pack latency; Ollama supported for local runs.

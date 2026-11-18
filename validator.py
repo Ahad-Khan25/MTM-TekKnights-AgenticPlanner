@@ -16,7 +16,7 @@ def metrics(p):
 
 
 def rule_ok(r, val):
-    x = r["value"]
+    x = r.get("value")
     if r["op"] == "min": return num(val) >= num(x)
     if r["op"] == "max": return num(val) <= num(x)
     if r["op"] == "equals": return num(val) == num(x) if num(x) is not None else str(val) == str(x)
@@ -32,8 +32,10 @@ def validate(F, p, log):
         checks.append({"name": name, "ok": bool(ok), "detail": detail})
 
     # 1 figures
-    ok = d["teams"] and d["teams"] == math.ceil(d["students"] / d["team_size"]) and d["judges_needed"] == math.ceil(d["teams"] / d["max_teams_per_judge"]) \
-        and V["headcount"] == fed == Fd.get("headcount") and Fd.get("boxes", 0) >= fed
+    ok = bool(d["teams"] and d["team_size"] and d["max_teams_per_judge"]
+              and d["teams"] == math.ceil(d["students"] / d["team_size"])
+              and d["judges_needed"] == math.ceil(d["teams"] / d["max_teams_per_judge"])
+              and V["headcount"] == fed == Fd.get("headcount") and Fd.get("boxes", 0) >= fed)
     add("Figures correct & consistent", ok, f"teams={d['teams']}, judges needed={d['judges_needed']}, people to feed={fed}, "
         f"boxes={Fd.get('boxes')}" + ("" if Fd.get("boxes", 0) >= fed else f"  << boxes {Fd.get('boxes')} < {fed} people"))
     # 2 budget
@@ -48,7 +50,7 @@ def validate(F, p, log):
     if not err:
         contiguous = all(bl[i]["end"] == bl[i + 1]["start"] for i in range(len(bl) - 1))
         length = sum(b["min"] for b in bl)
-        pr_need = num(next((r["value"] for r in rules(F) if r["field"] == "prayer_min"), 0)) or 0
+        pr_need = num(next((r.get("value") for r in rules(F) if r["field"] == "prayer_min"), 0)) or 0
         pr = sum(b["min"] for b in bl if "Prayer" in b["name"])
         jb = [b for b in bl if b["name"] == "Judging"]
         clash = [w for w in windows(F) for b in jb if t2m(b["start"]) < w[1] and t2m(b["end"]) > w[0]]
@@ -75,5 +77,5 @@ def validate(F, p, log):
         if not rule_ok(r, m[k]):
             idx = {"venue": 2, "schedule": 3, "food": 0, "judging": 4, "budget": 1}.get(r["area"], 0)
             checks[idx]["ok"] = False
-            checks[idx]["detail"] += f"  << rule {k} {r['op']} {r['value']} violated (plan has {m[k]})"
+            checks[idx]["detail"] += f"  << rule {k} {r['op']} {r.get('value')} violated (plan has {m[k]})"
     return checks
