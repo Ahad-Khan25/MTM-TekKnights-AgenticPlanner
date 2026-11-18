@@ -1,5 +1,5 @@
 """Reader: the ONLY component that calls a model (area tag "reading"). Extracts + normalizes facts; no arithmetic, no planning."""
-import json, re
+import csv, json, os, re, xml.etree.ElementTree as ET, zipfile
 import llm
 
 KINDS = {"approved_total_budget", "headcount", "team_size", "staff_count", "venue_option", "unit_price", "prepaid_cost",
@@ -134,6 +134,27 @@ def _validate(d, raw_text=""):
                 f["key"] = f"{f['key']}_{f['scope']}"
             seen_keys.add(f["key"])
     return msgs
+
+
+def extract_file_text(path):
+    """Extract raw text from any file format (.txt, .md, .csv, .tsv, .json, .docx, .pdf) so both CLI and Web Upload work on any format."""
+    ext = os.path.splitext(path)[1].lower()
+    if ext == ".docx":
+        with zipfile.ZipFile(path) as z:
+            xml = ET.fromstring(z.read("word/document.xml"))
+            return "\n".join("".join(p.itertext()).strip() for p in xml.iter() if p.tag.endswith("}p") and "".join(p.itertext()).strip())
+    if ext == ".pdf":
+        try:
+            import pypdf
+            return "\n".join((p.extract_text() or "") for p in pypdf.PdfReader(path).pages).strip()
+        except Exception:
+            raw = open(path, "rb").read().decode("latin-1", errors="ignore")
+            return "\n".join(re.findall(r"\(([^\(\)\\]{3,})\)", raw))
+    if ext in (".csv", ".tsv"):
+        sep = "\t" if ext == ".tsv" else ","
+        with open(path, encoding="utf-8", errors="ignore", newline="") as f:
+            return "\n".join(" | ".join(c.strip() for c in r if c and c.strip()) for r in csv.reader(f, delimiter=sep) if any(r))
+    return open(path, encoding="utf-8", errors="ignore").read()
 
 
 def read(text, existing_keys, trace):

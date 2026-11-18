@@ -39,7 +39,7 @@ def apply_update(st, m, log):
 
 def main(path):
     t0 = time.time()
-    text = open(path, encoding="utf-8").read()
+    text = reader.extract_file_text(path)
     st = store.load()
     log, start = [], len(st["trace"])
     new, hashes = store.new_text(st, text)

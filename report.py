@@ -147,12 +147,22 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         return self._send(200, _inline_page("web/intro"))
 
     def do_POST(self):
-        import main
+        import base64, main, reader
         n = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(n) or b"{}")
-        if self.path == "/api/reset":
+        if self.path == "/api/reset" or payload.get("reset"):
             shutil.rmtree(".state", ignore_errors=True)
             shutil.rmtree("out", ignore_errors=True)
+        if self.path == "/api/upload" and payload.get("data_b64"):
+            ext = os.path.splitext(payload.get("filename") or "upload.txt")[1].lower() or ".txt"
+            with tempfile.NamedTemporaryFile("wb", suffix=ext, delete=False) as f:
+                f.write(base64.b64decode(payload["data_b64"]))
+                tmp = f.name
+            try:
+                main.main(tmp)
+            finally:
+                os.remove(tmp)
+            return self._send(200, '{"ok":true}', "application/json")
         txt = (payload.get("text") or "").strip()
         if txt:
             with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False, encoding="utf-8") as f:

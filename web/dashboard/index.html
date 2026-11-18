@@ -57,7 +57,7 @@
           <h1 id="pageTitle" data-i18n="title">Executive overview</h1>
         </div>
         <div class="tools">
-          <label class="search"><span aria-hidden="true">⌕</span><input id="q" type="search" data-i18n-ph="search" placeholder="Search messages and trace" aria-label="Search"></label>
+          <label class="search"><span aria-hidden="true">⌕</span><input id="q" type="search" data-i18n-ph="search" placeholder="Search messages and trace" aria-label="Search"><small id="searchCount" style="white-space:nowrap;font-weight:600;color:var(--blue-deep)"></small></label>
           <div class="lang" role="group" aria-label="Language">
             <button type="button" data-lang="en" aria-pressed="true">EN</button>
             <button type="button" data-lang="ur" aria-pressed="false" lang="ur">اردو</button>
@@ -118,6 +118,8 @@
             <div class="feed">
               <input id="msg" type="text" data-i18n-ph="paste" placeholder="Paste a new message" aria-label="New message">
               <button class="btn" id="send" type="button" data-i18n="update">Update plan</button>
+              <input id="fileInput" type="file" accept=".txt,.csv,.tsv,.docx,.pdf,.json,.md" hidden>
+              <button class="btn" id="uploadBtn" type="button" style="background:#059669" title="Upload TXT, CSV, Word (.docx), PDF, JSON">Upload File (TXT/CSV/DOCX/PDF)</button>
               <button class="btn" id="resetBtn" type="button" style="background:#e11d48">Reset Pack</button>
             </div>
             <div class="chips"><span data-i18n="try">Try:</span>

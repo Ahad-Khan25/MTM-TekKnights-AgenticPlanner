@@ -327,28 +327,51 @@ function render() {
     }).join("");
   }
 
-  var q = $("q").value.toLowerCase();
-  $("rows").innerHTML = rows.filter(function (r) {
-    return !q || (r.from + r.text + r.why + (r.rawStatus || "")).toLowerCase().indexOf(q) > -1;
-  }).map(function (r) {
+  var q = $("q").value.trim().toLowerCase();
+  var matchedRows = rows.filter(function (r) {
+    return !q || (r.from + " " + r.text + " " + r.why + " " + (r.rawStatus || "")).toLowerCase().indexOf(q) > -1;
+  });
+  $("rows").innerHTML = matchedRows.map(function (r) {
     var label = r.rawStatus || t("st_" + r.st);
     return '<tr class="' + (r.rawStatus || "") + '"><td class="n">' + r.n + "</td><td>" + esc(r.from) + '</td><td><span class="txt">' + esc(r.text) +
       '</span><span class="why">' + esc(r.why) + '</span></td><td><span class="pill ' + STATUS_CLASS[r.st] + '">' + esc(label) + "</span></td></tr>";
-  }).join("");
+  }).join("") || '<tr><td colspan="4" style="text-align:center;color:var(--mute)">No matching messages for "' + esc(q) + '"</td></tr>';
 
   var n = 0, tokens = 0;
   calls.forEach(function (k) { if (!k.skip) { n++; k.id = k.id || n; tokens += (k.tot || (k.ti + k.to)); } });
-  $("calls").innerHTML = calls.filter(function (k) {
+  var matchedCalls = calls.filter(function (k) {
     return !q || JSON.stringify(k).toLowerCase().indexOf(q) > -1;
-  }).map(function (k) {
+  });
+  if ($("searchCount")) {
+    $("searchCount").textContent = q ? (matchedRows.length + " msg · " + matchedCalls.length + " trace") : "";
+  }
+  $("calls").innerHTML = matchedCalls.map(function (k, idx) {
     if (k.skip) {
       return '<div class="call skip-call"><div class="h"><span class="pill warn">' + esc(k.area) + "</span><span>" + t("noModel") +
         "</span></div><code>" + esc(k.out) + "</code></div>";
     }
+    var fullText = "INPUT:\n" + k.inp + "\n\nOUTPUT:\n" + k.out;
+    var shortInp = String(k.inp || "").split("MESSAGES:\n").pop().slice(0, 180).replace(/\s+/g, " ");
+    var shortOut = String(k.out || "").slice(0, 220);
+    var previewText = "In: " + shortInp + (String(k.inp || "").length > 180 ? "…" : "") +
+                      "\nOut: " + shortOut + (String(k.out || "").length > 220 ? "…" : "");
+    var isLong = fullText.length > 420;
     return '<div class="call"><div class="h"><b>' + t("callWord") + " #" + k.id + "</b><span>" + esc(k.model) +
       '</span><span class="pill">' + esc(k.area) + '</span><span class="tk">prompt=' + k.ti + " · completion=" + k.to + " · total=" + (k.tot || (k.ti + k.to)) +
-      "</span></div><code>INPUT:\n" + esc(k.inp) + "\n\nOUTPUT:\n" + esc(k.out) + "</code></div>";
-  }).join("");
+      '</span></div><code id="traceShort' + idx + '">' + esc(previewText) + '</code>' +
+      (isLong ? '<code id="traceFull' + idx + '" hidden style="margin-top:6px;max-height:360px;overflow:auto">' + esc(fullText) +
+      '</code><button type="button" class="chip trace-toggle" data-idx="' + idx + '" style="margin-top:8px">Read more ▾</button>' : "") +
+      "</div>";
+  }).join("") || '<div class="call skip-call"><code>No matching trace entries for "' + esc(q) + '"</code></div>';
+  document.querySelectorAll(".trace-toggle").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var i = btn.dataset.idx, sh = $("traceShort" + i), fl = $("traceFull" + i);
+      var open = fl.hidden;
+      fl.hidden = !open;
+      sh.hidden = open;
+      btn.textContent = open ? "Show less ▴" : "Read more ▾";
+    });
+  });
   $("tokTot").textContent = tokens.toLocaleString("en-US");
   $("callTot").textContent = n;
   $("nCalls").textContent = n;
@@ -432,6 +455,47 @@ async function update(text) {
 document.querySelectorAll(".lang button").forEach(function (b) { b.addEventListener("click", function () { setLang(b.dataset.lang); }); });
 $("send").addEventListener("click", function () { update($("msg").value); $("msg").value = ""; });
 $("msg").addEventListener("keydown", function (e) { if (e.key === "Enter") $("send").click(); });
+if ($("uploadBtn") && $("fileInput")) {
+  $("uploadBtn").addEventListener("click", function () { $("fileInput").click(); });
+  $("fileInput").addEventListener("change", function () {
+    var file = $("fileInput").files && $("fileInput").files[0];
+    if (!file) return;
+    var btn = $("uploadBtn");
+    btn.disabled = true;
+    btn.textContent = "Uploading " + file.name + "...";
+    var fr = new FileReader();
+    fr.onload = async function () {
+      var b64 = String(fr.result || "").split(",")[1] || "";
+      if (location.protocol.startsWith("http")) {
+        try {
+          var r = await fetch("/api/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filename: file.name, data_b64: b64 })
+          });
+          if (r.ok) {
+            await refreshFromServer();
+            $("trace").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
+          }
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Upload File (TXT/CSV/DOCX/PDF)";
+          $("fileInput").value = "";
+        }
+      } else {
+        // Static file:// fallback for text/csv files
+        var tr = new FileReader();
+        tr.onload = function () {
+          btn.disabled = false;
+          btn.textContent = "Upload File (TXT/CSV/DOCX/PDF)";
+          update(String(tr.result || ""));
+        };
+        tr.readAsText(file);
+      }
+    };
+    fr.readAsDataURL(file);
+  });
+}
 if ($("resetBtn")) {
   $("resetBtn").addEventListener("click", async function () {
     if (location.protocol.startsWith("http")) {
@@ -452,6 +516,13 @@ if ($("backIntroLink")) {
 }
 document.querySelectorAll(".chip").forEach(function (b) { b.addEventListener("click", function () { $("msg").value = b.dataset.m; }); });
 $("q").addEventListener("input", render);
+$("q").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    render();
+    var target = $("rows").querySelector("tr td:not([colspan])") ? $("sec-dec") : $("sec-ops");
+    if (target) target.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
+  }
+});
 
 $("menuBtn").addEventListener("click", function () { setDrawer(!document.body.classList.contains("drawer-open")); });
 $("scrim").addEventListener("click", function () { setDrawer(false); });
