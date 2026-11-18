@@ -41,12 +41,12 @@
 
     <nav aria-label="Sections" id="nav">
       <button class="navb" type="button" data-view="overview"><span data-i18n="nav_overview">Overview</span></button>
-      <button class="navb" type="button" data-view="ops"><span data-i18n="nav_ops">Operations</span><small id="nCalls">1</small></button>
+      <button class="navb" type="button" data-view="ops"><span data-i18n="nav_ops">Operations</span><small id="nCalls">0</small></button>
       <button class="navb" type="button" data-view="budget"><span data-i18n="nav_budget">Budget</span></button>
-      <button class="navb" type="button" data-view="dec"><span data-i18n="nav_dec">Decisions</span><small id="nRej">3</small></button>
+      <button class="navb" type="button" data-view="dec"><span data-i18n="nav_dec">Decisions</span><small id="nRej">0</small></button>
       <a class="navb" href="index.html" id="backIntroLink"><span>← Animated Intro</span></a>
     </nav>
-    <div class="side-note"><b data-i18n="side_title">Islamabad · 4 hours</b><span data-i18n="side_body">150 students, 50 teams, 10 staff, 17 judges.</span></div>
+    <div class="side-note"><b id="sideTitle" data-i18n="side_title">Event Planner</b><span id="sideBody" data-i18n="side_body">Live state synced from .state/state.json</span></div>
   </aside>
 
   <main id="main">
@@ -72,10 +72,10 @@
         <div class="chips" id="sixChecksBar" style="margin-bottom:16px"></div>
 
         <section class="grid cards" aria-label="Key figures">
-          <article class="card metric"><div class="lab" data-i18n="m_budget">Budget spent</div><div class="val" id="mSpent"></div><span class="pill warn" id="mLeft"></span></article>
-          <article class="card metric"><div class="lab" data-i18n="m_venue">Venue</div><div class="val" id="vHall" data-i18n="v_hall">Hall A</div><span class="pill" id="vSeats" data-i18n="v_seats">Seats 200 for 177 people</span></article>
-          <article class="card metric"><div class="lab" data-i18n="m_lunch">Lunch boxes</div><div class="val" id="vBoxes">177</div><span class="pill" id="vPrice" data-i18n="v_price">Rs 1,200 each, latest price</span></article>
-          <article class="card metric"><div class="lab" data-i18n="m_judges">Judges</div><div class="val" id="vJudges" data-i18n="v_judges">17 of 20</div><span class="pill" id="vJudgesN" data-i18n="v_judges_n">3 teams each, 15 min per team</span></article>
+          <article class="card metric"><div class="lab" data-i18n="m_budget">Budget spent</div><div class="val" id="mSpent">—</div><span class="pill warn" id="mLeft">—</span></article>
+          <article class="card metric"><div class="lab" data-i18n="m_venue">Venue</div><div class="val" id="vHall">—</div><span class="pill" id="vSeats">—</span></article>
+          <article class="card metric"><div class="lab" data-i18n="m_lunch">Lunch boxes</div><div class="val" id="vBoxes">—</div><span class="pill" id="vPrice">—</span></article>
+          <article class="card metric"><div class="lab" data-i18n="m_judges">Judges</div><div class="val" id="vJudges">—</div><span class="pill" id="vJudgesN">—</span></article>
         </section>
 
         <!-- Quick Edit Controls: directly edit budget, participants, team size, staff, judges, lunch price -->
@@ -83,10 +83,12 @@
           <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
             <div>
               <h2 style="margin:0">Quick Edit Plan Parameters</h2>
-              <p class="d" style="margin:0">Adjust participants, budget cap, team size, staff, judges, or lunch price and recompute instantly in code.</p>
+              <p class="d" style="margin:0">Validated on a shadow copy first — any invalid change (e.g. budget below committed spend, insufficient judges, or exceeding venue capacity) is rejected with the exact reason.</p>
             </div>
             <button class="btn" id="applyEditBtn" type="button">Apply &amp; Recompute Plan</button>
           </div>
+          <div class="banner bad" id="editErrorBanner" style="display:none;margin-bottom:12px"><span class="dot"></span><span id="editErrorText"></span></div>
+          <div class="banner" id="editOkBanner" style="display:none;margin-bottom:12px"><span class="dot"></span><span id="editOkText"></span></div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px">
             <label style="font-size:13px;color:var(--mute)">Students<input id="edStudents" type="number" min="1" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
             <label style="font-size:13px;color:var(--mute)">Team Size<input id="edTeamSize" type="number" min="1" style="width:100%;margin-top:4px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)"></label>
@@ -108,15 +110,15 @@
                 <li><h3 data-i18n="s1_t">Read</h3><p data-i18n="s1_d">A small model reads every message and picks out the facts.</p></li>
                 <li><h3 data-i18n="s2_t">Check</h3><p data-i18n="s2_d">Plain code tests each fact against headcount, seats and judge rules.</p></li>
                 <li><h3 data-i18n="s3_t">Price</h3><p data-i18n="s3_d">Venue, lunch, judges and fixed costs are added up in code.</p></li>
-                <li><h3 data-i18n="s4_t">Lock</h3><p data-i18n="s4_d">The plan is valid only if the total stays inside Rs 650,000.</p></li>
+                <li><h3 data-i18n="s4_t">Lock</h3><p data-i18n="s4_d">The plan is valid only if the total stays inside the approved budget cap.</p></li>
               </ol>
             </div>
             <div class="viz" aria-hidden="true">
               <div class="stack" id="stack">
-                <div class="layer" style="--i:0;--c:#60a5fa"><b data-i18n="lay1">Messages</b><span id="lv1"></span></div>
-                <div class="layer" style="--i:1;--c:#34d399"><b data-i18n="lay2">Headcount</b><span id="lv2">177</span></div>
-                <div class="layer" style="--i:2;--c:#fbbf24"><b data-i18n="lay3">Committed</b><span id="lv3"></span></div>
-                <div class="layer" style="--i:3;--c:#a5b4fc"><b data-i18n="lay4">Plan</b><span id="lv4"></span></div>
+                <div class="layer" style="--i:0;--c:#60a5fa"><b data-i18n="lay1">Messages</b><span id="lv1">—</span></div>
+                <div class="layer" style="--i:1;--c:#34d399"><b data-i18n="lay2">Headcount</b><span id="lv2">—</span></div>
+                <div class="layer" style="--i:2;--c:#fbbf24"><b data-i18n="lay3">Committed</b><span id="lv3">—</span></div>
+                <div class="layer" style="--i:3;--c:#a5b4fc"><b data-i18n="lay4">Plan</b><span id="lv4">—</span></div>
               </div>
             </div>
           </div>
@@ -155,9 +157,21 @@
       <!-- VIEW 3: Budget -->
       <section class="view enter" id="sec-budget" data-view="budget" style="margin-bottom:24px">
         <article class="card">
-          <h2 data-i18n="h_money">Where the money goes</h2>
-          <p class="d" data-i18n="d_money">Plain code does the sums. The model only reads messages.</p>
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:8px">
+            <div>
+              <h2 data-i18n="h_money" style="margin:0">Where the money goes</h2>
+              <p class="d" data-i18n="d_money" style="margin:0">Edit any budget line item below or add a new item — validated against the approved budget cap before committing.</p>
+            </div>
+            <button class="btn" id="saveBudgetLinesBtn" type="button">Apply Budget Allocation</button>
+          </div>
+          <div class="banner bad" id="budgetErrorBanner" style="display:none;margin-bottom:12px"><span class="dot"></span><span id="budgetErrorText"></span></div>
+          <div class="banner" id="budgetOkBanner" style="display:none;margin-bottom:12px"><span class="dot"></span><span id="budgetOkText"></span></div>
           <div class="bars" id="bars"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+            <input id="newLineName" type="text" placeholder="New item name (e.g. Refreshments)" style="flex:1;min-width:160px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)">
+            <input id="newLineAmt" type="number" min="0" step="1000" placeholder="Amount (Rs)" style="width:150px;padding:7px 10px;border-radius:10px;border:1px solid var(--line);background:var(--pearl)">
+            <button class="btn" id="addLineBtn" type="button" style="background:#059669">+ Add Item</button>
+          </div>
           <div class="total"><span data-i18n="total">Total committed</span><b id="tot"></b></div>
         </article>
       </section>

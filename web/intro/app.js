@@ -37,7 +37,8 @@
         entry.target.classList.add("is-visible");
         if (!budgetAnimated && entry.target.contains(animatedBudgetEl)) {
           budgetAnimated = true;
-          animateNumber(animatedBudgetEl, 547400, 750, "Rs ");
+          const liveTotal = window.__MTM_DATA__?.plan?.budget?.total;
+          if (liveTotal) animateNumber(animatedBudgetEl, liveTotal, 750, "Rs ");
         }
         observer.unobserve(entry.target);
       });

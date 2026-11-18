@@ -150,6 +150,54 @@ class _Handler(http.server.BaseHTTPRequestHandler):
         import base64, main, planner, reader, store, validator
         n = int(self.headers.get("Content-Length", 0))
         payload = json.loads(self.rfile.read(n) or b"{}")
+        if self.path == "/api/reset":
+            shutil.rmtree(".state", ignore_errors=True)
+            shutil.rmtree("out", ignore_errors=True)
+            os.makedirs("out", exist_ok=True)
+            empty_st = store.empty()
+            store.save(empty_st)
+            json.dump(_state_payload(empty_st, []), open("out/plan.json", "w", encoding="utf-8"), indent=1)
+            write_html(empty_st, [])
+            return self._send(200, '{"ok":true}', "application/json")
+        if self.path == "/api/budget-lines":
+            st = store.load()
+            if not st["plan"]:
+                return self._send(200, json.dumps({"ok": False, "rejected": True, "reason": "No active plan yet. Upload or paste messages first."}), "application/json")
+            log = []
+            facts = []
+            for item in payload.get("lines", []):
+                lbl, amt = str(item.get("item", "")).strip(), float(item.get("amount", 0))
+                if lbl == "Venue" and st["plan"]["venue"].get("chosen"):
+                    ch = dict(st["plan"]["venue"]["chosen"])
+                    ch["price"] = amt
+                    facts.append({"kind": "venue_option", "key": ch["name"], "value": ch, "unit": "Rs", "scope": "venue", "note": "UI budget edit"})
+                elif lbl == "Food":
+                    fed = max(1, st["plan"]["food"].get("boxes") or 1)
+                    facts.append({"kind": "unit_price", "key": st["plan"]["food"].get("tier") or "lunch_standard", "value": round(amt / fed, 2), "unit": "Rs", "scope": "meal", "note": "UI budget edit"})
+                elif lbl.startswith("Judge honoraria"):
+                    ju = max(1, st["plan"]["judging"].get("judges_used") or 1)
+                    facts.append({"kind": "unit_price", "key": "judge_honorarium", "value": round(amt / ju, 2), "unit": "Rs", "scope": "judge", "note": "UI budget edit"})
+                elif lbl.startswith("Prepaid:"):
+                    k = lbl.split(":", 1)[1].strip()
+                    facts.append({"kind": "prepaid_cost", "key": k, "value": amt, "unit": "Rs", "scope": "event", "note": "UI budget edit"})
+                elif lbl.startswith("Approved cost:"):
+                    k = lbl.split(":", 1)[1].strip()
+                    facts.append({"kind": "cost", "key": k, "value": amt, "unit": "Rs", "scope": "event", "note": "UI budget edit"})
+                elif lbl and not lbl.startswith(("Tax ", "Reserve ")):
+                    k = re.sub(r"\W+", "_", lbl.lower()).strip("_")
+                    facts.append({"kind": "cost", "key": k, "value": amt, "unit": "Rs", "scope": "event", "note": "UI budget edit"})
+            if facts:
+                m = {"id": len(st["messages"]) + 1, "sender": "Finance / Organizer (Budget Edit)", "role": "organizer", "date": "", "authority": "approved", "facts": facts}
+                main.apply_update(st, m, log)
+                store.message_status(st)
+                checks = validator.validate(main.active(st), st["plan"], log)
+                st["decisions"].append({"run": len(st["decisions"]) + 1, "file": "UI Budget Allocation", "entries": log})
+                store.save(st)
+                render(st, checks, len(st["trace"]), log, 0.0)
+                last_msg = st["messages"][-1]
+                if last_msg["status"] == "REJECTED":
+                    return self._send(200, json.dumps({"ok": False, "rejected": True, "reason": last_msg["reason"]}), "application/json")
+            return self._send(200, '{"ok":true,"rejected":false}', "application/json")
         if self.path == "/api/edit":
             st = store.load()
             if st["plan"] is None and os.path.exists("data/sample_pack.txt"):
@@ -170,7 +218,10 @@ class _Handler(http.server.BaseHTTPRequestHandler):
                 st["decisions"].append({"run": len(st["decisions"]) + 1, "file": "UI Quick Edit", "entries": log})
                 store.save(st)
                 render(st, checks, len(st["trace"]), log, 0.0)
-            return self._send(200, '{"ok":true}', "application/json")
+                last_msg = st["messages"][-1]
+                if last_msg["status"] == "REJECTED":
+                    return self._send(200, json.dumps({"ok": False, "rejected": True, "reason": last_msg["reason"]}), "application/json")
+            return self._send(200, '{"ok":true,"rejected":false}', "application/json")
         if self.path == "/api/reset" or payload.get("reset"):
             shutil.rmtree(".state", ignore_errors=True)
             shutil.rmtree("out", ignore_errors=True)

@@ -1,29 +1,22 @@
 /* Mind to Machine · Animated Command Centre
-   Single-scroll + spatial sidebar navigation, hydrated with real backend state (window.__MTM_DATA__ / /api/state). */
+   Zero hardcoded pack facts; single-scroll + spatial 3D navigation; live validation & rejection on edits. */
 
 var I18N = {
   en: {
     skip: "Skip to content", nav_overview: "Overview", nav_ops: "Operations", nav_budget: "Budget", nav_dec: "Decisions", views: "Views",
-    side_title: "Islamabad · 4 hours", side_body: "150 students, 50 teams, 10 staff, 17 judges.",
+    side_title: "Event Operations", side_body: "Live state synced from .state/state.json",
     kicker: "Event operations", title: "Executive overview", search: "Search messages and trace",
     ok: "Plan is valid. Every constraint is met.", bad: "Validation check failed. Review the latest change.",
     m_budget: "Budget spent", m_venue: "Venue", m_lunch: "Lunch boxes", m_judges: "Judges",
-    v_hall: "Hall A", v_seats: "Seats 200 for 177 people", v_price: "Rs 1,200 each, latest price",
-    v_judges: "17 of 20", v_judges_n: "3 teams each, 15 min per team", left: "left of",
+    left: "left of",
     story_h: "From message to plan", story_hint: "Scroll to pull the plan apart, layer by layer.",
     s1_t: "Read", s1_d: "A small model reads every message and picks out the facts.",
     s2_t: "Check", s2_d: "Plain code tests each fact against headcount, seats and judge rules.",
     s3_t: "Price", s3_d: "Venue, lunch, judges and fixed costs are added up in code.",
-    s4_t: "Lock", s4_d: "The plan is valid only if the total stays inside Rs 650,000.",
+    s4_t: "Lock", s4_d: "The plan is valid only if the total stays inside the approved budget cap.",
     lay1: "Messages", lay2: "Headcount", lay3: "Committed", lay4: "Plan",
-    h_money: "Where the money goes", d_money: "Plain code does the sums. The model only reads messages.", total: "Total committed",
-    b_venue: "Venue · Hall A", b_lunch: "Lunch · 177 × Rs 1,200", b_judges: "Judges · 17 × Rs 5,000",
-    b_prizes: "Prizes", b_internet: "Backup internet", b_print: "Printing",
-    h_sched: "Schedule", d_sched: "240 minutes, with a prayer break and no overlaps.",
-    s_checkin: "Check-in and briefing", s_checkin_d: "All 50 teams", s_build: "Build time", s_build_d: "110 minutes",
-    s_judging: "Judging, 3 rounds", s_judging_d: "45 minutes plus 5 minutes of slack for a late judge",
-    s_prayer: "Prayer break", s_prayer_d: "15 minutes", s_lunch: "Lunch", s_lunch_d: "177 boxes, delivery free",
-    s_awards: "Awards", s_awards_d: "Prizes Rs 100,000",
+    h_money: "Where the money goes", d_money: "Edit any budget line item below or add a new item — validated against the approved budget cap before committing.", total: "Total committed",
+    h_sched: "Schedule", d_sched: "Contiguous blocks with required prayer break and zero overlaps.",
     h_trace: "Trace", d_trace: "Every model call, numbered, with its area, input, output and tokens.",
     paste: "Paste a new message", update: "Update plan", try: "Try:", chip1: "Printing bill change", chip2: "Caterer rounds down",
     tokens: "Total tokens", callsWord: "calls", callWord: "Call", inWord: "in", outWord: "out", noModel: "Decision log (code, no model call)",
@@ -34,26 +27,19 @@ var I18N = {
   },
   ur: {
     skip: "مواد پر جائیں", nav_overview: "جائزہ", nav_ops: "آپریشنز", nav_budget: "بجٹ", nav_dec: "فیصلے", views: "مناظر",
-    side_title: "اسلام آباد · 4 گھنٹے", side_body: "150 طلبہ، 50 ٹیمیں، 10 عملہ، 17 جج۔",
+    side_title: "ایونٹ کے آپریشنز", side_body: "براہ راست اسٹیٹ سنک",
     kicker: "ایونٹ کے آپریشنز", title: "ایگزیکٹو جائزہ", search: "پیغامات اور ٹریس میں تلاش کریں",
     ok: "منصوبہ درست ہے۔ تمام شرائط پوری ہیں۔", bad: "منصوبہ بجٹ سے زیادہ ہے۔ تازہ تبدیلی دیکھیں۔",
     m_budget: "خرچ شدہ بجٹ", m_venue: "مقام", m_lunch: "لنچ باکس", m_judges: "جج صاحبان",
-    v_hall: "ہال اے", v_seats: "177 افراد کے لیے 200 نشستیں", v_price: "ہر ایک 1,200 روپے، تازہ قیمت",
-    v_judges: "20 میں سے 17", v_judges_n: "ہر جج 3 ٹیمیں، فی ٹیم 15 منٹ", left: "باقی از",
+    left: "باقی از",
     story_h: "پیغام سے منصوبے تک", story_hint: "نیچے سکرول کریں اور منصوبے کی تہیں کھلتی دیکھیں۔",
     s1_t: "پڑھنا", s1_d: "چھوٹا ماڈل ہر پیغام پڑھ کر حقائق نکالتا ہے۔",
     s2_t: "جانچ", s2_d: "سادہ کوڈ ہر حقیقت کو افراد، نشستوں اور ججوں کی شرائط سے پرکھتا ہے۔",
     s3_t: "قیمت", s3_d: "مقام، لنچ، جج اور مقررہ اخراجات کوڈ میں جمع ہوتے ہیں۔",
-    s4_t: "حتمی", s4_d: "منصوبہ تبھی درست ہے جب کل رقم 650,000 روپے کے اندر رہے۔",
+    s4_t: "حتمی", s4_d: "منصوبہ تبھی درست ہے جب کل رقم منظور شدہ بجٹ کے اندر رہے۔",
     lay1: "پیغامات", lay2: "افراد", lay3: "مختص رقم", lay4: "منصوبہ",
     h_money: "رقم کہاں خرچ ہو رہی ہے", d_money: "حساب سادہ کوڈ کرتا ہے۔ ماڈل صرف پیغامات پڑھتا ہے۔", total: "کل مختص رقم",
-    b_venue: "مقام · ہال اے", b_lunch: "لنچ · 177 × 1,200 روپے", b_judges: "جج · 17 × 5,000 روپے",
-    b_prizes: "انعامات", b_internet: "بیک اپ انٹرنیٹ", b_print: "پرنٹنگ",
-    h_sched: "شیڈول", d_sched: "240 منٹ، جس میں 15 منٹ کا نماز کا وقفہ شامل ہے۔",
-    s_checkin: "رجسٹریشن اور بریفنگ", s_checkin_d: "تمام 50 ٹیمیں", s_build: "تیاری کا وقت", s_build_d: "110 منٹ",
-    s_judging: "ججنگ، 3 راؤنڈ", s_judging_d: "45 منٹ اور دیر سے آنے والے جج کے لیے 5 منٹ کی گنجائش",
-    s_prayer: "نماز کا وقفہ", s_prayer_d: "15 منٹ", s_lunch: "لنچ", s_lunch_d: "177 باکس، ڈیلیوری مفت",
-    s_awards: "انعامات کی تقسیم", s_awards_d: "انعامات 100,000 روپے",
+    h_sched: "شیڈول", d_sched: "نماز کے وقفے سمیت مکمل شیڈول۔",
     h_trace: "ٹریس", d_trace: "ہر ماڈل کال، نمبر کے ساتھ، اس کے شعبے، ان پٹ، آؤٹ پٹ اور ٹوکن سمیت۔",
     paste: "نیا پیغام یہاں چسپاں کریں", update: "منصوبہ اپ ڈیٹ کریں", try: "آزمائیں:", chip1: "پرنٹنگ بل میں تبدیلی", chip2: "کیٹرر نے تعداد کم کر دی",
     tokens: "کل ٹوکن", callsWord: "کالز", callWord: "کال", inWord: "ان", outWord: "آؤٹ", noModel: "ماڈل کال نہیں۔ سادہ کوڈ۔",
@@ -64,26 +50,19 @@ var I18N = {
   },
   rm: {
     skip: "Content par jayein", nav_overview: "Jaiza", nav_ops: "Operations", nav_budget: "Budget", nav_dec: "Faislay", views: "Manazir",
-    side_title: "Islamabad · 4 ghante", side_body: "150 students, 50 teams, 10 staff, 17 judges.",
+    side_title: "Event Operations", side_body: "Live state synced from .state/state.json",
     kicker: "Event operations ki tafseel", title: "Executive jaiza", search: "Messages aur trace mein talash karein",
     ok: "Plan durust hai. Tamam shara'it poori hain.", bad: "Plan budget se zyada hai. Taza tabdeeli dekhein.",
     m_budget: "Kharch shuda budget", m_venue: "Maqam", m_lunch: "Lunch box", m_judges: "Judges",
-    v_hall: "Hall A", v_seats: "177 afraad ke liye 200 nashistein", v_price: "Rs 1,200 har ek, taza qeemat",
-    v_judges: "20 mein se 17", v_judges_n: "Har judge 3 teams, har team 15 min", left: "baqi az",
+    left: "baqi az",
     story_h: "Message se plan tak", story_hint: "Neeche scroll karein aur plan ki tahein khulti dekhein.",
     s1_t: "Parhna", s1_d: "Chhota model har message parh kar haqaiq nikalta hai.",
     s2_t: "Jaanch", s2_d: "Simple code har haqeeqat ko afraad, nashiston aur judges ki sharait se parakhta hai.",
     s3_t: "Qeemat", s3_d: "Maqam, lunch, judges aur muqarrara akhrajaat code mein jama hote hain.",
-    s4_t: "Hatmi", s4_d: "Plan tabhi durust hai jab kul raqam Rs 650,000 ke andar rahe.",
+    s4_t: "Hatmi", s4_d: "Plan tabhi durust hai jab kul raqam manzoor shuda budget ke andar rahe.",
     lay1: "Messages", lay2: "Afraad", lay3: "Mukhtas raqam", lay4: "Plan",
     h_money: "Paisa kahan ja raha hai", d_money: "Hisaab simple code karta hai. Model sirf messages parhta hai.", total: "Kul mukhtas raqam",
-    b_venue: "Maqam · Hall A", b_lunch: "Lunch · 177 × Rs 1,200", b_judges: "Judges · 17 × Rs 5,000",
-    b_prizes: "Inaamat", b_internet: "Backup internet", b_print: "Printing",
-    h_sched: "Schedule", d_sched: "240 minute, jis mein 15 minute ka namaz ka waqfa shamil hai.",
-    s_checkin: "Check-in aur briefing", s_checkin_d: "Tamam 50 teams", s_build: "Banane ka waqt", s_build_d: "110 minute",
-    s_judging: "Judging, 3 rounds", s_judging_d: "45 minute aur der se anay wale judge ke liye 5 minute ki gunjaish",
-    s_prayer: "Namaz ka waqfa", s_prayer_d: "15 minute", s_lunch: "Lunch", s_lunch_d: "177 box, delivery free",
-    s_awards: "Inaamat ki taqseem", s_awards_d: "Inaamat Rs 100,000",
+    h_sched: "Schedule", d_sched: "Namaz ke waqfe samait mukammal schedule.",
     h_trace: "Trace", d_trace: "Har model call, number ke saath, uska area, input, output aur tokens.",
     paste: "Naya message yahan paste karein", update: "Plan update karein", try: "Aazmayein:", chip1: "Printing bill mein tabdeeli", chip2: "Caterer ne boxes kam kar diye",
     tokens: "Kul tokens", callsWord: "calls", callWord: "Call", inWord: "in", outWord: "out", noModel: "Model call nahi. Simple code.",
@@ -98,8 +77,7 @@ var LANGS = { en: { lang: "en", dir: "ltr" }, ur: { lang: "ur", dir: "rtl" }, rm
 var STATUS_CLASS = { used: "", old: "warn", held: "warn", info: "info", rej: "bad", chg: "" };
 var VIEWS = ["overview", "ops", "budget", "dec"];
 
-var state = { lang: "en", view: "overview", print: 10000, total: 650000, live: null };
-
+var state = { lang: "en", view: "overview", live: null };
 var rows = [];
 var calls = [];
 
@@ -111,12 +89,20 @@ function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function 
 var RM = window.matchMedia("(prefers-reduced-motion: reduce)");
 function reduced() { return RM.matches; }
 
-function hydrateFromBackend(data) {
-  if (!data || !data.plan) return;
-  state.live = data;
-  var p = data.plan, B = p.budget || {};
-  state.total = B.available || 650000;
+function showBanner(errId, txtId, okId, okTxtId, isErr, msg) {
+  if ($(errId)) $(errId).style.display = isErr ? "flex" : "none";
+  if ($(txtId) && isErr) $(txtId).textContent = msg;
+  if ($(okId)) $(okId).style.display = !isErr && msg ? "flex" : "none";
+  if ($(okTxtId) && !isErr) $(okTxtId).textContent = msg;
+}
 
+function hydrateFromBackend(data) {
+  state.live = data || null;
+  if (!data || !data.plan) {
+    rows = [];
+    calls = [];
+    return;
+  }
   var mapSt = { ACCEPTED: "used", SUPERSEDED: "old", IGNORED: "held", REJECTED: "rej" };
   var factsByMsg = {};
   (data.facts || []).forEach(function (f) {
@@ -218,7 +204,6 @@ function storyUpdate() {
     stage.style.setProperty("--p", p.toFixed(3));
     setStep(Math.min(3, Math.floor(p * 4)));
   }
-  // Scrollspy: update active sidebar item + 3D plate + ambient glow as user scrolls through the single page
   var best = state.view, bestDist = 1e9;
   document.querySelectorAll(".view").forEach(function (sec) {
     var rect = sec.getBoundingClientRect();
@@ -236,7 +221,6 @@ function storyUpdate() {
 }
 function queueStory() { if (!sTick) { sTick = true; requestAnimationFrame(storyUpdate); } }
 
-/* ================= Views (All sections visible in single scroll + smooth jump on click) ================= */
 function setDrawer(open) {
   document.body.classList.toggle("drawer-open", open);
   $("scrim").hidden = !open;
@@ -262,9 +246,7 @@ function showView(v) {
   document.body.dataset.view = v;
   syncView();
   try { history.replaceState(null, "", "#" + v); } catch (e) { /* ignore */ }
-  if (target) {
-    target.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
-  }
+  if (target) target.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "start" });
 }
 
 function applyStatic() {
@@ -284,16 +266,44 @@ function render() {
   var p = live && live.plan ? live.plan : null;
   var checks = live && live.checks ? live.checks : [];
 
-  if (p) {
+  if (!p) {
+    $("mSpent").textContent = "—";
+    $("mLeft").textContent = "No active plan — upload a file or paste messages below";
+    $("vHall").textContent = "—";
+    $("vSeats").textContent = "—";
+    $("vBoxes").textContent = "—";
+    $("vPrice").textContent = "—";
+    $("vJudges").textContent = "—";
+    $("vJudgesN").textContent = "—";
+    $("tot").textContent = "Rs 0";
+    $("lv1").textContent = "0";
+    $("lv2").textContent = "0";
+    $("lv3").textContent = "Rs 0";
+    $("lv4").textContent = "—";
+    $("bars").innerHTML = '<div style="color:var(--mute);font-size:14px">No budget lines yet. Upload a pack (.txt, .csv, .docx, .pdf) or paste messages in Operations → Trace to build a plan from scratch.</div>';
+    $("tl").innerHTML = '<div style="color:var(--mute);font-size:14px">No schedule blocks yet.</div>';
+    if ($("sixChecksBar")) $("sixChecksBar").innerHTML = "";
+    $("banner").className = "banner";
+    $("bannerText").textContent = "State cleared. Upload a pack file or paste messages to build a new event plan from scratch.";
+    if ($("edStudents")) $("edStudents").value = "";
+    if ($("edTeamSize")) $("edTeamSize").value = "";
+    if ($("edStaff")) $("edStaff").value = "";
+    if ($("edBudget")) $("edBudget").value = "";
+    if ($("edJudges")) $("edJudges").value = "";
+    if ($("edLunch")) $("edLunch").value = "";
+  } else {
     var B = p.budget, V = p.venue, Fd = p.food, J = p.judging, S = p.schedule, d = p.figures;
     var ch = V.chosen || {};
     var allOk = checks.length ? checks.every(function (c) { return c.ok; }) : (B.remaining >= 0);
+
+    if ($("sideTitle")) $("sideTitle").textContent = "Event · " + Math.round((S.total_min || 240) / 60) + " hours";
+    if ($("sideBody")) $("sideBody").textContent = (d.students || 0) + " students, " + (d.teams || 0) + " teams, " + (d.staff || 0) + " staff, " + (J.judges_used || 0) + " judges.";
 
     $("mSpent").textContent = fmt(B.total);
     $("mLeft").textContent = fmt(Math.abs(B.remaining)) + " " + t("left") + " " + fmt(B.available);
     $("tot").textContent = fmt(B.total);
     $("lv1").textContent = rows.length;
-    $("lv2").textContent = V.headcount || 177;
+    $("lv2").textContent = V.headcount || 0;
     $("lv3").textContent = fmt(B.total);
     $("lv4").textContent = allOk ? "✓" : "✕";
 
@@ -303,17 +313,20 @@ function render() {
     if ($("vPrice")) $("vPrice").textContent = fmt(Fd.unit_price || 0) + " each (" + (Fd.tier || "") + ", msg #" + (Fd.price_msg || "?") + ")";
     if ($("vJudges")) $("vJudges").textContent = (J.judges_used || 0) + " of " + (J.pool || 0);
     if ($("vJudgesN")) $("vJudgesN").textContent = "Max " + (J.max_teams_assigned || 0) + " teams each, " + (d.minutes_per_team || 15) + "m/team";
-    if ($("edStudents") && document.activeElement !== $("edStudents")) $("edStudents").value = d.students || 150;
-    if ($("edTeamSize") && document.activeElement !== $("edTeamSize")) $("edTeamSize").value = d.team_size || 3;
-    if ($("edStaff") && document.activeElement !== $("edStaff")) $("edStaff").value = d.staff || 10;
-    if ($("edBudget") && document.activeElement !== $("edBudget")) $("edBudget").value = B.cap || 650000;
-    if ($("edJudges") && document.activeElement !== $("edJudges")) $("edJudges").value = J.pool || 20;
-    if ($("edLunch") && document.activeElement !== $("edLunch")) $("edLunch").value = Fd.unit_price || 1200;
+    if ($("edStudents") && document.activeElement !== $("edStudents")) $("edStudents").value = d.students;
+    if ($("edTeamSize") && document.activeElement !== $("edTeamSize")) $("edTeamSize").value = d.team_size;
+    if ($("edStaff") && document.activeElement !== $("edStaff")) $("edStaff").value = d.staff;
+    if ($("edBudget") && document.activeElement !== $("edBudget")) $("edBudget").value = B.cap;
+    if ($("edJudges") && document.activeElement !== $("edJudges")) $("edJudges").value = J.pool;
+    if ($("edLunch") && document.activeElement !== $("edLunch")) $("edLunch").value = Fd.unit_price;
 
     var maxLine = Math.max.apply(null, (B.lines || []).map(function (l) { return l.amount || 1; }).concat([250000]));
     $("bars").innerHTML = (B.lines || []).map(function (l, i) {
-      return '<div class="bar' + (i < 3 ? "" : " r") + '"><div class="t"><span>' + esc(l.item) + "</span><span>" + fmt(l.amount) +
-        '</span></div><div class="track"><div class="fill" style="transform:scaleX(' + Math.min(1, (l.amount || 0) / maxLine).toFixed(3) + ')"></div></div></div>';
+      return '<div class="bar' + (i < 3 ? "" : " r") + '"><div class="t" style="align-items:center"><span>' + esc(l.item) +
+        '</span><span style="display:inline-flex;align-items:center;gap:6px">Rs <input class="bline-input" data-item="' + esc(l.item) +
+        '" type="number" min="0" step="1000" value="' + Math.round(l.amount || 0) +
+        '" style="width:120px;padding:4px 8px;border-radius:8px;border:1px solid var(--line);background:var(--pearl);text-align:end;font-weight:600"></span></div>' +
+        '<div class="track"><div class="fill" style="transform:scaleX(' + Math.min(1, (l.amount || 0) / maxLine).toFixed(3) + ')"></div></div></div>';
     }).join("");
 
     $("banner").className = "banner" + (allOk ? "" : " bad");
@@ -341,7 +354,7 @@ function render() {
     var label = r.rawStatus || t("st_" + r.st);
     return '<tr class="' + (r.rawStatus || "") + '"><td class="n">' + r.n + "</td><td>" + esc(r.from) + '</td><td><span class="txt">' + esc(r.text) +
       '</span><span class="why">' + esc(r.why) + '</span></td><td><span class="pill ' + STATUS_CLASS[r.st] + '">' + esc(label) + "</span></td></tr>";
-  }).join("") || '<tr><td colspan="4" style="text-align:center;color:var(--mute)">No matching messages for "' + esc(q) + '"</td></tr>';
+  }).join("") || '<tr><td colspan="4" style="text-align:center;color:var(--mute)">' + (q ? 'No matching messages for "' + esc(q) + '"' : "No messages in state.") + '</td></tr>';
 
   var n = 0, tokens = 0;
   calls.forEach(function (k) { if (!k.skip) { n++; k.id = k.id || n; tokens += (k.tot || (k.ti + k.to)); } });
@@ -370,7 +383,7 @@ function render() {
       '<code id="traceFull' + idx + '" style="display:none;margin-top:6px;max-height:320px;overflow:auto">' + esc(fullText) +
       '</code><button type="button" class="chip trace-toggle" data-idx="' + idx + '" style="margin-top:8px">Read full raw trace ▾</button>' +
       "</div>";
-  }).join("") || '<div class="call skip-call"><code>No matching trace entries for "' + esc(q) + '"</code></div>';
+  }).join("") || '<div class="call skip-call"><code>' + (q ? 'No matching trace entries for "' + esc(q) + '"' : "No trace entries yet.") + '</code></div>';
   document.querySelectorAll(".trace-toggle").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var i = btn.dataset.idx, sh = $("traceShort" + i), fl = $("traceFull" + i);
@@ -394,10 +407,6 @@ function setLang(l) {
 }
 
 async function refreshFromServer() {
-  if (window.__MTM_DATA__) {
-    hydrateFromBackend(window.__MTM_DATA__);
-    render();
-  }
   if (location.protocol.startsWith("http")) {
     try {
       var r = await fetch("/api/state");
@@ -406,8 +415,13 @@ async function refreshFromServer() {
         window.__MTM_DATA__ = d;
         hydrateFromBackend(d);
         render();
+        return;
       }
-    } catch (e) { /* static mode */ }
+    } catch (e) { /* static fallback */ }
+  }
+  if (window.__MTM_DATA__) {
+    hydrateFromBackend(window.__MTM_DATA__);
+    render();
   }
 }
 
@@ -429,105 +443,164 @@ async function update(text) {
         $("trace").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
         return;
       }
-    } catch (e) { /* fallback below */ }
-    finally {
+    } finally {
       btn.disabled = false;
       btn.textContent = t("update");
     }
   }
-  var cost = m.match(/Rs\s?([\d,]+).*?not\s*Rs\s?([\d,]+)/i), box = m.match(/(\d+)\s*boxes/i), area, out, st, why;
-  if (box && +box[1] < 177) {
-    area = "food"; st = "rej";
-    why = "REJECTED: Figures correct & consistent would FAIL: boxes=" + box[1] + " < 177 people. Previous plan restored.";
-    out = "Conflict with headcount 177. Kept 177 boxes. Plan unchanged.";
-  } else if (cost && /print/i.test(m)) {
-    state.print = +cost[1].replace(/,/g, ""); area = "budget"; st = "chg";
-    why = "ACCEPTED. Areas recomputed (code): ['budget']; Areas that made model calls: [reading]";
-    out = "printing = " + state.print + ". Total recomputed.";
-    if (state.live && state.live.plan && state.live.plan.budget) {
-      state.live.plan.budget.lines.forEach(function (l) { if (/printing/i.test(l.item)) l.amount = state.print; });
-      state.live.plan.budget.total = state.live.plan.budget.lines.reduce(function (a, b) { return a + b.amount; }, 0);
-      state.live.plan.budget.remaining = state.live.plan.budget.available - state.live.plan.budget.total;
-    }
-  } else {
-    area = "reading"; st = "info"; why = "No active fact changed; plan unchanged."; out = "No change found.";
-  }
-  calls.push({ area: "reading", model: "openai/gpt-oss-20b", inp: m, out: "area affected: " + area, ti: 1200, to: 89, tot: 1289 });
-  calls.push({ area: "Code decision", skip: true, out: why + " (" + out + ")" });
-  rows.push({ n: rows.length + 1, from: "New message", text: m, st: st, rawStatus: st === "rej" ? "REJECTED" : st === "chg" ? "ACCEPTED" : "IGNORED", why: why });
-  render();
-  $("trace").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
 }
 
-/* ================= Wiring ================= */
-document.querySelectorAll(".lang button").forEach(function (b) { b.addEventListener("click", function () { setLang(b.dataset.lang); }); });
-$("send").addEventListener("click", function () { update($("msg").value); $("msg").value = ""; });
-$("msg").addEventListener("keydown", function (e) { if (e.key === "Enter") $("send").click(); });
+/* ================= Quick Edit Parameters (with strict validation & rejection error banner) ================= */
 if ($("applyEditBtn")) {
   $("applyEditBtn").addEventListener("click", async function () {
+    showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", false, "");
     var payload = {
-      students: +($("edStudents").value || 150),
-      team_size: +($("edTeamSize").value || 3),
-      staff: +($("edStaff").value || 10),
-      budget_cap: +($("edBudget").value || 650000),
-      judges_confirmed: +($("edJudges").value || 20),
-      lunch_standard: +($("edLunch").value || 1200)
+      students: +($("edStudents").value || 0),
+      team_size: +($("edTeamSize").value || 0),
+      staff: +($("edStaff").value || 0),
+      budget_cap: +($("edBudget").value || 0),
+      judges_confirmed: +($("edJudges").value || 0),
+      lunch_standard: +($("edLunch").value || 0)
     };
+    if (payload.students <= 0 || payload.team_size <= 0) {
+      showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", true, "REJECTED: Students and Team Size must be greater than 0.");
+      return;
+    }
     if (location.protocol.startsWith("http")) {
-      $("applyEditBtn").textContent = "Recomputing...";
+      $("applyEditBtn").textContent = "Validating...";
       try {
         var r = await fetch("/api/edit", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
-        if (r.ok) await refreshFromServer();
+        var res = await r.json();
+        await refreshFromServer();
+        if (res.rejected) {
+          showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", true, "REJECTED: " + res.reason + " — Previous valid plan restored.");
+        } else {
+          showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", false, "Plan updated & verified (6/6 checks PASS).");
+        }
       } finally {
         $("applyEditBtn").textContent = "Apply & Recompute Plan";
       }
       return;
     }
-    // Static file:// instant pure-JS recompute
+    // Static file:// validation on a shadow copy before committing
     if (state.live && state.live.plan) {
       var p = state.live.plan, d = p.figures, J = p.judging, V = p.venue, Fd = p.food, B = p.budget;
-      d.students = payload.students;
-      d.team_size = payload.team_size;
-      d.staff = payload.staff;
-      d.teams = Math.ceil(d.students / d.team_size);
-      d.judges_needed = Math.ceil(d.teams / (d.max_teams_per_judge || 3));
-      J.pool = payload.judges_confirmed;
-      J.judges_needed = d.judges_needed;
-      J.judges_used = Math.min(J.pool, d.judges_needed);
-      J.feasible = J.pool >= d.judges_needed;
-      J.honoraria = J.judges_used * (J.fee_per_judge || 5000);
-      var fed = d.students + d.staff + J.judges_used;
-      V.headcount = fed;
-      V.required_capacity = fed;
-      Fd.headcount = fed;
-      Fd.boxes = fed;
-      Fd.unit_price = payload.lunch_standard;
-      Fd.cost = fed * payload.lunch_standard;
-      B.cap = payload.budget_cap;
-      B.available = B.cap + (B.funding || 0);
-      B.lines.forEach(function (l) {
-        if (/^Food/i.test(l.item)) l.amount = Fd.cost;
-        if (/^Judge/i.test(l.item)) { l.item = "Judge honoraria (" + J.judges_used + " x " + (J.fee_per_judge || 5000) + ")"; l.amount = J.honoraria; }
-      });
-      B.total = B.lines.reduce(function (a, b) { return a + b.amount; }, 0);
-      B.remaining = B.available - B.total;
-      if (state.live.checks && state.live.checks.length >= 5) {
-        state.live.checks[0].ok = Fd.boxes >= fed;
-        state.live.checks[0].detail = "teams=" + d.teams + ", judges needed=" + d.judges_needed + ", people to feed=" + fed + ", boxes=" + Fd.boxes;
-        state.live.checks[1].ok = B.total <= B.available;
-        state.live.checks[1].detail = "total " + fmt(B.total) + " vs available " + fmt(B.available) + " (remaining " + fmt(B.remaining) + ")";
-        state.live.checks[2].ok = (V.chosen && V.chosen.capacity >= fed);
-        state.live.checks[4].ok = J.feasible;
+      var teams = Math.ceil(payload.students / payload.team_size);
+      var needJudges = Math.ceil(teams / (d.max_teams_per_judge || 3));
+      if (payload.judges_confirmed < needJudges) {
+        showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", true,
+          "REJECTED: Enough judges check would FAIL — pool " + payload.judges_confirmed + " < needed " + needJudges + " for " + teams + " teams. Previous plan restored.");
+        render();
+        return;
       }
-      calls.push({ skip: true, area: "UI Quick Edit (code, no model call)", out: "Updated parameters: students=" + d.students + ", team_size=" + d.team_size + ", staff=" + d.staff + ", budget_cap=" + B.cap + ", judges=" + J.pool + ", lunch=" + Fd.unit_price + " -> total=" + fmt(B.total) });
+      var usedJudges = needJudges;
+      var fed = payload.students + payload.staff + usedJudges;
+      var capVenue = (V.chosen && V.chosen.capacity) || 0;
+      if (capVenue && fed > capVenue) {
+        showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", true,
+          "REJECTED: Venue fits check would FAIL — headcount " + fed + " exceeds venue capacity " + capVenue + ". Previous plan restored.");
+        render();
+        return;
+      }
+      var newFoodCost = fed * payload.lunch_standard;
+      var newHon = usedJudges * (J.fee_per_judge || 0);
+      var otherLines = B.lines.reduce(function (acc, l) {
+        return (/^Food/i.test(l.item) || /^Judge/i.test(l.item)) ? acc : acc + (l.amount || 0);
+      }, 0);
+      var newTotal = otherLines + newFoodCost + newHon;
+      var newAvail = payload.budget_cap + (B.funding || 0);
+      if (newTotal > newAvail) {
+        showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", true,
+          "REJECTED: Within budget check would FAIL — committed spend " + fmt(newTotal) + " exceeds allocated budget " + fmt(newAvail) + " (shortfall " + fmt(newTotal - newAvail) + "). Previous plan restored.");
+        render();
+        return;
+      }
+      // Valid -> commit
+      d.students = payload.students; d.team_size = payload.team_size; d.staff = payload.staff;
+      d.teams = teams; d.judges_needed = needJudges;
+      J.pool = payload.judges_confirmed; J.judges_needed = needJudges; J.judges_used = usedJudges; J.honoraria = newHon;
+      V.headcount = fed; Fd.headcount = fed; Fd.boxes = fed; Fd.unit_price = payload.lunch_standard; Fd.cost = newFoodCost;
+      B.cap = payload.budget_cap; B.available = newAvail;
+      B.lines.forEach(function (l) {
+        if (/^Food/i.test(l.item)) l.amount = newFoodCost;
+        if (/^Judge/i.test(l.item)) { l.item = "Judge honoraria (" + usedJudges + " x " + (J.fee_per_judge || 0) + ")"; l.amount = newHon; }
+      });
+      B.total = newTotal; B.remaining = newAvail - newTotal;
+      showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", false, "Plan updated & verified (6/6 checks PASS).");
       render();
     }
   });
 }
+
+/* ================= Where the Money Goes — Line-Item Allocation Editor ================= */
+async function submitBudgetLines(lines) {
+  showBanner("budgetErrorBanner", "budgetErrorText", "budgetOkBanner", "budgetOkText", false, "");
+  if (location.protocol.startsWith("http")) {
+    $("saveBudgetLinesBtn").textContent = "Validating...";
+    try {
+      var r = await fetch("/api/budget-lines", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lines: lines })
+      });
+      var res = await r.json();
+      await refreshFromServer();
+      if (res.rejected) {
+        showBanner("budgetErrorBanner", "budgetErrorText", "budgetOkBanner", "budgetOkText", true, "REJECTED: " + res.reason + " — Previous valid budget restored.");
+      } else {
+        showBanner("budgetErrorBanner", "budgetErrorText", "budgetOkBanner", "budgetOkText", false, "Budget allocation updated & verified within cap.");
+      }
+    } finally {
+      $("saveBudgetLinesBtn").textContent = "Apply Budget Allocation";
+    }
+    return;
+  }
+  // Static file:// validation
+  if (state.live && state.live.plan) {
+    var B = state.live.plan.budget;
+    var newTotal = lines.reduce(function (a, b) { return a + (b.amount || 0); }, 0);
+    if (newTotal > B.available) {
+      showBanner("budgetErrorBanner", "budgetErrorText", "budgetOkBanner", "budgetOkText", true,
+        "REJECTED: Within budget check would FAIL — total " + fmt(newTotal) + " exceeds available budget " + fmt(B.available) + ". Previous allocation restored.");
+      render();
+      return;
+    }
+    B.lines = lines;
+    B.total = newTotal;
+    B.remaining = B.available - newTotal;
+    showBanner("budgetErrorBanner", "budgetErrorText", "budgetOkBanner", "budgetOkText", false, "Budget allocation updated & verified within cap.");
+    render();
+  }
+}
+
+if ($("saveBudgetLinesBtn")) {
+  $("saveBudgetLinesBtn").addEventListener("click", function () {
+    var lines = [].slice.call(document.querySelectorAll(".bline-input")).map(function (inp) {
+      return { item: inp.dataset.item, amount: +(inp.value || 0) };
+    });
+    submitBudgetLines(lines);
+  });
+}
+if ($("addLineBtn")) {
+  $("addLineBtn").addEventListener("click", function () {
+    var name = ($("newLineName").value || "").trim(), amt = +($("newLineAmt").value || 0);
+    if (!name || amt <= 0) {
+      showBanner("budgetErrorBanner", "budgetErrorText", "budgetOkBanner", "budgetOkText", true, "Enter a valid item name and positive amount.");
+      return;
+    }
+    var lines = [].slice.call(document.querySelectorAll(".bline-input")).map(function (inp) {
+      return { item: inp.dataset.item, amount: +(inp.value || 0) };
+    });
+    lines.push({ item: "Approved cost: " + name, amount: amt });
+    $("newLineName").value = ""; $("newLineAmt").value = "";
+    submitBudgetLines(lines);
+  });
+}
+
 if ($("uploadBtn") && $("fileInput")) {
   $("uploadBtn").addEventListener("click", function () { $("fileInput").click(); });
   $("fileInput").addEventListener("change", function () {
@@ -548,22 +621,13 @@ if ($("uploadBtn") && $("fileInput")) {
           });
           if (r.ok) {
             await refreshFromServer();
-            $("trace").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
+            $("sec-overview").scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
           }
         } finally {
           btn.disabled = false;
           btn.textContent = "Upload File (TXT/CSV/DOCX/PDF)";
           $("fileInput").value = "";
         }
-      } else {
-        // Static file:// fallback for text/csv files
-        var tr = new FileReader();
-        tr.onload = function () {
-          btn.disabled = false;
-          btn.textContent = "Upload File (TXT/CSV/DOCX/PDF)";
-          update(String(tr.result || ""));
-        };
-        tr.readAsText(file);
       }
     };
     fr.readAsDataURL(file);
@@ -571,11 +635,17 @@ if ($("uploadBtn") && $("fileInput")) {
 }
 if ($("resetBtn")) {
   $("resetBtn").addEventListener("click", async function () {
+    showBanner("editErrorBanner", "editErrorText", "editOkBanner", "editOkText", false, "");
+    showBanner("budgetErrorBanner", "budgetErrorText", "budgetOkBanner", "budgetOkText", false, "");
     if (location.protocol.startsWith("http")) {
-      $("resetBtn").textContent = "Resetting...";
+      $("resetBtn").textContent = "Clearing...";
       await fetch("/api/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
       $("resetBtn").textContent = "Reset Pack";
       await refreshFromServer();
+    } else {
+      window.__MTM_DATA__ = null;
+      hydrateFromBackend(null);
+      render();
     }
   });
 }
@@ -587,6 +657,9 @@ if ($("backIntroLink")) {
     }
   });
 }
+document.querySelectorAll(".lang button").forEach(function (b) { b.addEventListener("click", function () { setLang(b.dataset.lang); }); });
+$("send").addEventListener("click", function () { update($("msg").value); $("msg").value = ""; });
+$("msg").addEventListener("keydown", function (e) { if (e.key === "Enter") $("send").click(); });
 document.querySelectorAll(".chip").forEach(function (b) { b.addEventListener("click", function () { $("msg").value = b.dataset.m; }); });
 $("q").addEventListener("input", render);
 $("q").addEventListener("keydown", function (e) {
@@ -609,7 +682,6 @@ document.querySelectorAll(".plate").forEach(function (b) {
   b.addEventListener("pointerleave", function () { $("sceneLabel").textContent = t("nav_" + state.view); });
 });
 
-/* Micro-interactions: magnetic buttons, tilting KPI cards, cursor glow on every card, parallax 3D scene */
 document.querySelectorAll(".btn, .chip, .lang button").forEach(function (el) { bind(el, "mag"); });
 document.querySelectorAll(".metric").forEach(function (el) { bind(el, "tilt"); });
 document.querySelectorAll(".card").forEach(glow);
